@@ -1,0 +1,10 @@
+# Lower bounds, not exact pins. Any reasonably recent version of these works.
+#
+# The Sinkhorn solver and the eigendecomposition inside the Bures map are both
+# iterative, so results can move in the third decimal across library versions.
+# The per-fold CSVs in this repository are the run the paper reports.
+numpy>=1.24
+pandas>=1.5
+scipy>=1.10
+scikit-learn>=1.2
+matplotlib>=3.6

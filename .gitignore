@@ -1,0 +1,11 @@
+# The proprietary inputs. Never commit these.
+cleaned_*.csv
+
+# Generated output
+tables/
+figures/
+
+__pycache__/
+*.pyc
+.DS_Store
+*.log

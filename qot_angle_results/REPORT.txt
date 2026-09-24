@@ -1,0 +1,690 @@
+NOTE ON THIS FILE. It is the run log exactly as printed, with two edits. The local
+data and output paths are replaced by <local path>, and this note is prepended. The
+log says "rotation" where the paper says "fold". They are the same thing, one of the
+eight evenly spaced starting positions for the held-out evaluation half.
+
+NOTE ADDED 22 September 2026. Stages 0, 1, 4 and 5 below are the eight-rotation main run
+and are current. The permutation and sweep stages ran at four rotations and are
+superseded by rerun_perm8.py and rerun_sweeps8.py. Each is marked where it starts.
+The numbers in the paper's Sensitivity subsection are in qot_results/SENSITIVITY_REPORT.txt.
+
+
+==============================================================================================
+QOT CROSS-SITE TRANSFER   COMPLETE EXPERIMENT
+==============================================================================================
+  data folder : <local path>
+  output      : <local path>/qot_angle_results
+  stage       : all
+  started     : 2026-09-12 12:51:16
+
+Task    per-rail profile exceedance, max |Prof62| in a BMP-EMP segment > 0.4 in
+Data    cleaned_<SITE>.csv, 4 TTC sites, 12 directed pairs
+Feats   8 ballast channels, own rail and centre, one index per pair
+Encode  Amp  8 features -> 3 qubits -> rank-one 8x8 density matrix
+        Ang  own rail as theta, centre as phi, one ballast index per qubit,
+             4 qubits -> 16x16. Fixed category bounds (BFI/BTI 1-5,
+             MLI/LRI 1-3), so no clipping and no site dependence, and
+             theta held in [0.01pi, 0.99pi] so phi is never destroyed.
+
+
+==============================================================================================
+STAGE 0  VERIFY   correctness, then whether the readouts can see anything
+==============================================================================================
+
+--- splits ---
+  [PASS] arc and eval never overlap; arc always outside the eval block
+  [PASS] eval block is exactly half the site and contiguous
+  [PASS] EVAL BLOCKS COVER THE WHOLE SITE across rotations   100.0% of segments appear in some eval block
+  [PASS] 200 ft buffer respected   closest arc segment 200 ft from the block
+  [PASS] the two arc modes really differ   contig 2 runs vs random 109 runs, same size 270
+
+--- encoding and vectorisation ---
+  [PASS] rho has unit trace
+  [PASS] rho is PSD
+  [PASS] unvec(vec(rho)) == rho
+  [PASS] angle encoding gives 4 qubits, 16x16   got 16x16
+  [PASS] rho is complex, so phi is alive   max |imag| = 0.4735
+  [PASS] vec_rho is a Hilbert-Schmidt isometry   HS 1.354997 vs Euclidean 1.354997
+  [PASS] and dropping the sqrt(2) would break it (check is not vacuous)
+
+--- the Bures map ---
+  [PASS] M rho_A M^dag == rho_B for the class means
+  [PASS] transported segments keep unit trace and stay PSD
+
+--- Sinkhorn output is still a density matrix ---
+  [PASS] unvec(Sinkhorn barycentre) has unit trace and is PSD
+
+--- nothing in the evaluation half reaches any fit ---
+  [PASS] unconditional Bures map unchanged when eval is replaced
+  [PASS] conditional Bures map unchanged when eval is replaced
+  [PASS] conditional Sinkhorn unchanged when eval is replaced
+  [PASS] PCA basis unchanged when eval is replaced
+  [PASS] HS training features unchanged when eval is replaced
+
+--- the readouts touch what the Uses column claims ---
+  [PASS] HSsrc ignores arc labels
+  [PASS] HS4 does NOT ignore arc labels
+  [PASS] the unconditional map ignores arc labels
+  [PASS] the conditional map does NOT
+
+----------------------------------------------------------------------------------------------
+SENSITIVITY CONTROL   can each readout SEE a transport effect?
+----------------------------------------------------------------------------------------------
+
+A known gap is applied to the target and each readout must recover part of it.
+
+The gap is a per-channel monotone WARP plus SHIFT of the ordinal scale,
+    x -> clip( lo + (hi-lo)*((x-lo)/(hi-lo))**gamma  +  delta*(hi-lo),  lo, hi ),
+gamma in [0.4, 2.5] and delta in [-0.3, 0.3], which is what a calibration
+gain drift plus an offset between two GPR surveys looks like. Measured drop
+with no transport is about 0.05 balanced accuracy, comparable to the 0.069
+the amplitude script sees, so the control is live.
+It stays inside the category bounds, preserves the ordering, and is a gap in
+the DATA rather than in any one encoding's state space, so it is fair to the
+angle and amplitude encodings alike. The linear gap x -> Ax used in the
+amplitude script is exactly Bures-form under amplitude encoding and is NOT
+under the angle map, so it would have flattered one arm and penalised the
+other. Recovery is measured against the readout's own ceiling and floor,
+both with NO transport, gap off and gap on.
+
+    recovery = (transport - floor) / (ceiling - floor)
+
+A readout scoring near zero here cannot be used to report a null, since its
+null would say nothing about the method.
+
+  averaged over 12 (site, draw) cells
+
+  readout   ceiling    floor     QOTu     QOTc  rec(QOTu)  rec(QOTc)
+  HS4         0.635    0.597    0.631    0.674       0.89       2.00
+  [PASS] HS4 can see a transport effect (recovery >= 0.15)   best recovery 2.00
+  HSsrc       0.655    0.603    0.629    0.620       0.51       0.33
+  [PASS] HSsrc can see a transport effect (recovery >= 0.15)   best recovery 0.51
+  PCA         0.633    0.544    0.579    0.644       0.39       1.13
+  [PASS] PCA can see a transport effect (recovery >= 0.15)   best recovery 1.13
+
+  [PASS] the injected gap actually degrades performance (control is live)
+
+----------------------------------------------------------------------------------------------
+0 failed check(s)  — CLEAR
+----------------------------------------------------------------------------------------------
+
+==============================================================================================
+STAGE 1  MAIN   16 methods x 1 encoding(s), 2 rails, 2 arc constructions, 5 budgets
+==============================================================================================
+
+[Ang] Right rail segments:  HTL n=803 pos=166 (20.7%)   PTT n=2272 pos=121 (5.3%)   RTT n=4259 pos=82 (1.9%)   WRM n=1017 pos=59 (5.8%)
+
+----------------------------------------------------------------------------------------------
+[Ang encoding] Right rail, contig arc   mean BAC over 12 pairs (sd across pairs) [sd across the 4 target sites]
+----------------------------------------------------------------------------------------------
+  method                     uses                      5%                     10%                     20%                     30%                     50%      n
+  NoAdapt                 nothing   0.572 (0.075) [0.028]   0.572 (0.075) [0.028]   0.572 (0.075) [0.028]   0.572 (0.075) [0.028]   0.572 (0.075) [0.028]    480
+  TargetOnly           arc labels   0.553 (0.077) [0.085]   0.599 (0.093) [0.102]   0.616 (0.070) [0.077]   0.612 (0.066) [0.073]   0.615 (0.041) [0.046]    381
+  Source+Target        arc labels   0.565 (0.053) [0.026]   0.563 (0.049) [0.009]   0.582 (0.064) [0.029]   0.585 (0.061) [0.034]   0.587 (0.048) [0.032]    381
+  COT                  arc labels   0.552 (0.092) [0.098]   0.555 (0.106) [0.115]   0.552 (0.038) [0.037]   0.538 (0.053) [0.053]   0.538 (0.034) [0.031]    381
+  none-Ang-HS4         arc labels   0.542 (0.094) [0.030]   0.541 (0.081) [0.032]   0.542 (0.069) [0.026]   0.544 (0.064) [0.020]   0.546 (0.071) [0.032]    381
+  none-Ang-HSsrc          nothing   0.551 (0.073) [0.032]   0.551 (0.073) [0.032]   0.551 (0.073) [0.032]   0.551 (0.073) [0.032]   0.551 (0.073) [0.032]    480
+  none-Ang-PCA       arc segments   0.529 (0.083) [0.048]   0.521 (0.078) [0.047]   0.526 (0.090) [0.058]   0.521 (0.095) [0.061]   0.519 (0.097) [0.058]    480
+  QOTu-Ang-HS4         arc labels   0.610 (0.096) [0.084]   0.604 (0.079) [0.081]   0.606 (0.071) [0.074]   0.598 (0.059) [0.056]   0.595 (0.057) [0.051]    381
+  QOTu-Ang-HSsrc     arc segments   0.602 (0.052) [0.045]   0.602 (0.056) [0.054]   0.598 (0.058) [0.056]   0.594 (0.056) [0.052]   0.590 (0.056) [0.052]    480
+  QOTu-Ang-PCA       arc segments   0.566 (0.062) [0.049]   0.569 (0.070) [0.057]   0.570 (0.064) [0.050]   0.558 (0.073) [0.040]   0.567 (0.075) [0.045]    480
+  QOTc-Ang-HS4         arc labels   0.518 (0.054) [0.054]   0.552 (0.038) [0.038]   0.591 (0.060) [0.063]   0.584 (0.059) [0.064]   0.616 (0.056) [0.061]    381
+  QOTc-Ang-HSsrc       arc labels   0.541 (0.082) [0.080]   0.562 (0.072) [0.050]   0.602 (0.061) [0.062]   0.597 (0.061) [0.054]   0.600 (0.056) [0.050]    381
+  QOTc-Ang-PCA         arc labels   0.529 (0.055) [0.059]   0.539 (0.046) [0.045]   0.529 (0.037) [0.015]   0.536 (0.031) [0.021]   0.544 (0.037) [0.033]    381
+  SDM-Ang-HS4          arc labels   0.521 (0.061) [0.066]   0.541 (0.053) [0.057]   0.566 (0.050) [0.050]   0.576 (0.049) [0.052]   0.612 (0.043) [0.045]    381
+  SDM-Ang-HSsrc        arc labels   0.537 (0.116) [0.123]   0.575 (0.081) [0.085]   0.597 (0.068) [0.066]   0.595 (0.051) [0.045]   0.601 (0.038) [0.036]    381
+  SDM-Ang-PCA          arc labels   0.521 (0.058) [0.058]   0.513 (0.016) [0.015]   0.528 (0.027) [0.022]   0.536 (0.023) [0.016]   0.559 (0.035) [0.032]    381
+
+  ISOLATED CONTRASTS   mean  wins/12  p(12 pairs)  p(4 sites, floor 0.125)
+  contrast                                                5%                     10%                     20%                     30%                     50%
+  QOTu-Ang-HS4 - none-Ang-HS4        +0.068 12/12 0.000 0.12 +0.063 11/12 0.002 0.12 +0.065 12/12 0.000 0.12 +0.054 12/12 0.000 0.12 +0.049 12/12 0.000 0.12
+  QOTu-Ang-HSsrc - none-Ang-HSsrc    +0.051 11/12 0.002 0.12 +0.051 11/12 0.001 0.12 +0.047 11/12 0.001 0.12 +0.043 11/12 0.001 0.12 +0.039 10/12 0.005 0.12
+  QOTu-Ang-PCA - none-Ang-PCA         +0.038 9/12 0.052 0.12 +0.047 10/12 0.003 0.12 +0.044 10/12 0.052 0.12  +0.037 8/12 0.077 0.12  +0.048 9/12 0.012 0.12
+  QOTc-Ang-HS4 - none-Ang-HS4         -0.025 3/12 0.380 0.25  +0.011 6/12 0.910 0.12 +0.049 10/12 0.042 0.12  +0.039 8/12 0.233 0.38 +0.070 11/12 0.005 0.12
+  QOTc-Ang-HSsrc - none-Ang-HSsrc     -0.010 5/12 0.424 0.88  +0.011 5/12 0.850 0.62  +0.051 9/12 0.042 0.12  +0.046 9/12 0.110 0.12  +0.049 9/12 0.016 0.12
+  QOTc-Ang-PCA - none-Ang-PCA         -0.000 5/12 0.733 0.88  +0.017 6/12 0.569 0.62  +0.003 9/12 0.470 1.00  +0.015 9/12 0.301 0.88  +0.025 9/12 0.129 0.12
+  SDM-Ang-HS4 - none-Ang-HS4          -0.021 3/12 0.339 0.38  +0.000 5/12 0.791 1.00  +0.024 7/12 0.424 0.62  +0.032 7/12 0.301 0.38 +0.065 11/12 0.003 0.12
+  SDM-Ang-HSsrc - none-Ang-HSsrc      -0.014 4/12 0.266 0.88  +0.024 7/12 0.424 0.62  +0.046 8/12 0.042 0.12  +0.044 9/12 0.042 0.12 +0.050 11/12 0.016 0.12
+  SDM-Ang-PCA - none-Ang-PCA          -0.008 5/12 0.569 0.62  -0.009 5/12 0.910 0.62  +0.002 6/12 0.733 0.88  +0.015 9/12 0.204 0.62  +0.039 8/12 0.092 0.12
+  QOTu-Ang-HS4 - SDM-Ang-HS4         +0.089 11/12 0.001 0.12 +0.062 11/12 0.001 0.12 +0.040 11/12 0.012 0.25  +0.022 9/12 0.151 0.62  -0.016 4/12 0.176 0.62
+  QOTu-Ang-HSsrc - SDM-Ang-HSsrc     +0.065 10/12 0.027 0.38  +0.027 9/12 0.052 0.25  +0.001 6/12 1.000 1.00  -0.000 5/12 0.791 0.88  -0.011 5/12 0.470 0.38
+  QOTu-Ang-PCA - SDM-Ang-PCA         +0.046 11/12 0.016 0.12 +0.056 10/12 0.042 0.25  +0.042 8/12 0.052 0.12  +0.022 7/12 0.519 0.25  +0.009 7/12 0.733 0.62
+  QOTu-Ang-HSsrc - TargetOnly        +0.049 10/12 0.009 0.25  +0.003 5/12 1.000 1.00  -0.018 3/12 0.077 0.25  -0.017 6/12 0.677 0.62  -0.025 4/12 0.077 0.12
+  TargetOnly - NoAdapt                -0.019 2/12 0.233 0.88  +0.027 6/12 0.970 0.88  +0.045 8/12 0.380 0.38  +0.040 8/12 0.339 0.62 +0.043 10/12 0.042 0.12
+  COT - NoAdapt                       -0.020 3/12 0.204 0.88  -0.017 3/12 0.301 0.88  -0.020 4/12 0.380 0.62  -0.034 3/12 0.151 0.38  -0.033 4/12 0.151 0.12
+
+  PER TARGET SITE   QOTu-Ang-HSsrc minus none-Ang-HSsrc  (n = 4 independent units)
+       5%  HTL +0.037  PTT +0.045  RTT +0.070  WRM +0.052   |  4/4 positive
+      10%  HTL +0.034  PTT +0.048  RTT +0.085  WRM +0.036   |  4/4 positive
+      20%  HTL +0.033  PTT +0.042  RTT +0.084  WRM +0.028   |  4/4 positive
+      30%  HTL +0.032  PTT +0.040  RTT +0.075  WRM +0.027   |  4/4 positive
+      50%  HTL +0.029  PTT +0.035  RTT +0.071  WRM +0.021   |  4/4 positive
+
+----------------------------------------------------------------------------------------------
+[Ang encoding] Right rail, random arc   mean BAC over 12 pairs (sd across pairs) [sd across the 4 target sites]
+----------------------------------------------------------------------------------------------
+  method                     uses                      5%                     10%                     20%                     30%                     50%      n
+  NoAdapt                 nothing   0.572 (0.075) [0.028]   0.572 (0.075) [0.028]   0.572 (0.075) [0.028]   0.572 (0.075) [0.028]   0.572 (0.075) [0.028]    480
+  TargetOnly           arc labels   0.574 (0.042) [0.046]   0.586 (0.070) [0.077]   0.610 (0.055) [0.060]   0.614 (0.053) [0.059]   0.615 (0.041) [0.046]    480
+  Source+Target        arc labels   0.567 (0.064) [0.024]   0.568 (0.066) [0.025]   0.576 (0.062) [0.026]   0.581 (0.053) [0.028]   0.587 (0.048) [0.032]    480
+  COT                  arc labels   0.516 (0.022) [0.012]   0.539 (0.043) [0.046]   0.547 (0.035) [0.032]   0.542 (0.046) [0.047]   0.538 (0.034) [0.031]    480
+  none-Ang-HS4         arc labels   0.541 (0.066) [0.024]   0.543 (0.076) [0.032]   0.548 (0.076) [0.037]   0.545 (0.077) [0.038]   0.546 (0.071) [0.032]    480
+  none-Ang-HSsrc          nothing   0.551 (0.073) [0.032]   0.551 (0.073) [0.032]   0.551 (0.073) [0.032]   0.551 (0.073) [0.032]   0.551 (0.073) [0.032]    480
+  none-Ang-PCA       arc segments   0.527 (0.082) [0.048]   0.520 (0.094) [0.060]   0.522 (0.090) [0.059]   0.520 (0.094) [0.061]   0.519 (0.097) [0.058]    480
+  QOTu-Ang-HS4         arc labels   0.592 (0.060) [0.054]   0.596 (0.059) [0.054]   0.596 (0.057) [0.052]   0.596 (0.062) [0.055]   0.595 (0.057) [0.051]    480
+  QOTu-Ang-HSsrc     arc segments   0.592 (0.054) [0.050]   0.590 (0.055) [0.050]   0.590 (0.057) [0.053]   0.590 (0.056) [0.052]   0.590 (0.056) [0.052]    480
+  QOTu-Ang-PCA       arc segments   0.568 (0.073) [0.057]   0.567 (0.077) [0.044]   0.569 (0.076) [0.042]   0.569 (0.083) [0.045]   0.567 (0.075) [0.045]    480
+  QOTc-Ang-HS4         arc labels   0.573 (0.040) [0.039]   0.590 (0.052) [0.055]   0.606 (0.053) [0.057]   0.613 (0.053) [0.057]   0.616 (0.056) [0.061]    480
+  QOTc-Ang-HSsrc       arc labels   0.561 (0.050) [0.037]   0.578 (0.056) [0.037]   0.596 (0.049) [0.041]   0.600 (0.057) [0.048]   0.600 (0.056) [0.050]    480
+  QOTc-Ang-PCA         arc labels   0.511 (0.020) [0.015]   0.529 (0.019) [0.011]   0.530 (0.038) [0.018]   0.540 (0.035) [0.027]   0.544 (0.037) [0.033]    480
+  SDM-Ang-HS4          arc labels   0.531 (0.021) [0.013]   0.556 (0.034) [0.027]   0.583 (0.036) [0.033]   0.591 (0.035) [0.034]   0.612 (0.043) [0.045]    480
+  SDM-Ang-HSsrc        arc labels   0.554 (0.048) [0.042]   0.572 (0.042) [0.032]   0.588 (0.041) [0.039]   0.601 (0.037) [0.037]   0.601 (0.038) [0.036]    480
+  SDM-Ang-PCA          arc labels   0.502 (0.017) [0.016]   0.513 (0.017) [0.011]   0.524 (0.031) [0.029]   0.533 (0.021) [0.018]   0.559 (0.035) [0.032]    480
+
+  ISOLATED CONTRASTS   mean  wins/12  p(12 pairs)  p(4 sites, floor 0.125)
+  contrast                                                5%                     10%                     20%                     30%                     50%
+  QOTu-Ang-HS4 - none-Ang-HS4        +0.051 12/12 0.000 0.12 +0.053 12/12 0.000 0.12 +0.048 11/12 0.003 0.12 +0.051 12/12 0.000 0.12 +0.049 12/12 0.000 0.12
+  QOTu-Ang-HSsrc - none-Ang-HSsrc    +0.041 11/12 0.002 0.12 +0.039 11/12 0.002 0.12 +0.039 11/12 0.001 0.12 +0.039 10/12 0.002 0.12 +0.039 10/12 0.005 0.12
+  QOTu-Ang-PCA - none-Ang-PCA        +0.041 11/12 0.005 0.12  +0.047 9/12 0.012 0.12 +0.047 10/12 0.009 0.12 +0.049 10/12 0.007 0.12  +0.048 9/12 0.012 0.12
+  QOTc-Ang-HS4 - none-Ang-HS4         +0.032 9/12 0.092 0.25  +0.047 9/12 0.034 0.12 +0.058 11/12 0.016 0.12 +0.068 11/12 0.016 0.12 +0.070 11/12 0.005 0.12
+  QOTc-Ang-HSsrc - none-Ang-HSsrc     +0.010 6/12 1.000 0.62  +0.027 6/12 0.424 0.12  +0.045 9/12 0.021 0.12  +0.048 9/12 0.027 0.12  +0.049 9/12 0.016 0.12
+  QOTc-Ang-PCA - none-Ang-PCA         -0.016 6/12 0.970 0.62  +0.008 8/12 0.301 1.00  +0.008 7/12 0.470 1.00  +0.020 9/12 0.176 0.38  +0.025 9/12 0.129 0.12
+  SDM-Ang-HS4 - none-Ang-HS4          -0.011 3/12 0.339 0.62  +0.013 5/12 0.910 0.25  +0.035 8/12 0.092 0.12 +0.046 10/12 0.052 0.12 +0.065 11/12 0.003 0.12
+  SDM-Ang-HSsrc - none-Ang-HSsrc      +0.003 6/12 0.733 0.88  +0.020 8/12 0.233 0.12 +0.037 10/12 0.042 0.12 +0.050 10/12 0.027 0.12 +0.050 11/12 0.016 0.12
+  SDM-Ang-PCA - none-Ang-PCA          -0.025 5/12 0.424 0.38  -0.007 7/12 0.910 0.62  +0.002 6/12 0.569 0.88  +0.013 8/12 0.233 0.88  +0.039 8/12 0.092 0.12
+  QOTu-Ang-HS4 - SDM-Ang-HS4         +0.061 12/12 0.000 0.12 +0.039 11/12 0.021 0.12  +0.013 9/12 0.151 0.62  +0.005 7/12 0.622 0.88  -0.016 4/12 0.176 0.62
+  QOTu-Ang-HSsrc - SDM-Ang-HSsrc     +0.038 10/12 0.009 0.12  +0.019 9/12 0.110 0.38  +0.001 6/12 0.970 0.88  -0.011 5/12 0.339 0.88  -0.011 5/12 0.470 0.38
+  QOTu-Ang-PCA - SDM-Ang-PCA         +0.065 11/12 0.001 0.12 +0.054 11/12 0.005 0.12  +0.045 9/12 0.027 0.12  +0.037 6/12 0.339 0.12  +0.009 7/12 0.733 0.62
+  QOTu-Ang-HSsrc - TargetOnly         +0.018 9/12 0.052 0.12  +0.004 6/12 0.677 0.88  -0.020 3/12 0.077 0.12  -0.024 4/12 0.064 0.12  -0.025 4/12 0.077 0.12
+  TargetOnly - NoAdapt                +0.003 5/12 0.791 0.88  +0.015 6/12 0.677 0.88  +0.038 7/12 0.176 0.12  +0.042 9/12 0.077 0.12 +0.043 10/12 0.042 0.12
+  COT - NoAdapt                       -0.056 1/12 0.003 0.12  -0.033 3/12 0.092 0.25  -0.024 4/12 0.266 0.12  -0.029 3/12 0.110 0.12  -0.033 4/12 0.151 0.12
+
+  PER TARGET SITE   QOTu-Ang-HSsrc minus none-Ang-HSsrc  (n = 4 independent units)
+       5%  HTL +0.036  PTT +0.034  RTT +0.069  WRM +0.024   |  4/4 positive
+      10%  HTL +0.034  PTT +0.034  RTT +0.068  WRM +0.021   |  4/4 positive
+      20%  HTL +0.030  PTT +0.034  RTT +0.071  WRM +0.020   |  4/4 positive
+      30%  HTL +0.031  PTT +0.034  RTT +0.070  WRM +0.020   |  4/4 positive
+      50%  HTL +0.029  PTT +0.035  RTT +0.071  WRM +0.021   |  4/4 positive
+
+[Ang] Left rail segments:  HTL n=803 pos=167 (20.8%)   PTT n=2272 pos=139 (6.1%)   RTT n=4259 pos=70 (1.6%)   WRM n=1017 pos=54 (5.3%)
+
+----------------------------------------------------------------------------------------------
+[Ang encoding] Left rail, contig arc   mean BAC over 12 pairs (sd across pairs) [sd across the 4 target sites]
+----------------------------------------------------------------------------------------------
+  method                     uses                      5%                     10%                     20%                     30%                     50%      n
+  NoAdapt                 nothing   0.560 (0.053) [0.032]   0.560 (0.053) [0.032]   0.560 (0.053) [0.032]   0.560 (0.053) [0.032]   0.560 (0.053) [0.032]    480
+  TargetOnly           arc labels   0.489 (0.010) [0.011]   0.524 (0.036) [0.040]   0.538 (0.030) [0.033]   0.544 (0.049) [0.054]   0.554 (0.052) [0.058]    369
+  Source+Target        arc labels   0.565 (0.057) [0.053]   0.566 (0.050) [0.045]   0.558 (0.038) [0.035]   0.562 (0.039) [0.037]   0.555 (0.039) [0.034]    369
+  COT                  arc labels   0.462 (0.022) [0.024]   0.500 (0.030) [0.021]   0.526 (0.031) [0.031]   0.535 (0.040) [0.042]   0.530 (0.050) [0.053]    369
+  none-Ang-HS4         arc labels   0.536 (0.054) [0.029]   0.528 (0.048) [0.036]   0.527 (0.033) [0.019]   0.520 (0.030) [0.012]   0.528 (0.034) [0.023]    369
+  none-Ang-HSsrc          nothing   0.520 (0.056) [0.035]   0.520 (0.056) [0.035]   0.520 (0.056) [0.035]   0.520 (0.056) [0.035]   0.520 (0.056) [0.035]    480
+  none-Ang-PCA       arc segments   0.532 (0.030) [0.017]   0.529 (0.029) [0.019]   0.533 (0.030) [0.015]   0.529 (0.032) [0.021]   0.530 (0.034) [0.019]    480
+  QOTu-Ang-HS4         arc labels   0.532 (0.052) [0.029]   0.536 (0.052) [0.042]   0.536 (0.044) [0.029]   0.533 (0.039) [0.021]   0.527 (0.027) [0.020]    369
+  QOTu-Ang-HSsrc     arc segments   0.519 (0.045) [0.022]   0.521 (0.044) [0.025]   0.522 (0.050) [0.028]   0.522 (0.051) [0.028]   0.529 (0.050) [0.027]    480
+  QOTu-Ang-PCA       arc segments   0.535 (0.022) [0.015]   0.518 (0.032) [0.020]   0.525 (0.027) [0.015]   0.526 (0.031) [0.018]   0.532 (0.034) [0.021]    480
+  QOTc-Ang-HS4         arc labels   0.458 (0.054) [0.047]   0.486 (0.033) [0.027]   0.518 (0.047) [0.042]   0.524 (0.043) [0.045]   0.536 (0.041) [0.043]    369
+  QOTc-Ang-HSsrc       arc labels   0.498 (0.039) [0.014]   0.505 (0.039) [0.016]   0.540 (0.050) [0.038]   0.537 (0.041) [0.025]   0.528 (0.057) [0.045]    369
+  QOTc-Ang-PCA         arc labels   0.487 (0.029) [0.024]   0.505 (0.041) [0.026]   0.508 (0.027) [0.023]   0.523 (0.024) [0.019]   0.534 (0.036) [0.029]    369
+  SDM-Ang-HS4          arc labels   0.490 (0.013) [0.009]   0.497 (0.037) [0.040]   0.504 (0.030) [0.030]   0.497 (0.045) [0.047]   0.531 (0.050) [0.053]    369
+  SDM-Ang-HSsrc        arc labels   0.480 (0.032) [0.010]   0.498 (0.047) [0.035]   0.552 (0.052) [0.053]   0.548 (0.046) [0.043]   0.549 (0.048) [0.042]    369
+  SDM-Ang-PCA          arc labels   0.486 (0.039) [0.033]   0.523 (0.033) [0.025]   0.528 (0.028) [0.029]   0.522 (0.016) [0.011]   0.522 (0.027) [0.025]    369
+
+  ISOLATED CONTRASTS   mean  wins/12  p(12 pairs)  p(4 sites, floor 0.125)
+  contrast                                                5%                     10%                     20%                     30%                     50%
+  QOTu-Ang-HS4 - none-Ang-HS4         -0.005 6/12 0.733 0.88  +0.008 8/12 0.266 0.25  +0.009 9/12 0.301 0.38  +0.013 9/12 0.301 0.25  -0.001 6/12 0.910 0.88
+  QOTu-Ang-HSsrc - none-Ang-HSsrc     -0.001 6/12 0.970 1.00  +0.002 8/12 0.569 0.88  +0.002 7/12 0.733 0.62  +0.002 6/12 0.910 0.88  +0.009 9/12 0.204 0.38
+  QOTu-Ang-PCA - none-Ang-PCA         +0.004 5/12 0.677 0.88  -0.011 4/12 0.424 0.62  -0.008 5/12 0.339 0.38  -0.004 4/12 0.470 0.88  +0.003 8/12 0.470 0.62
+  QOTc-Ang-HS4 - none-Ang-HS4         -0.079 3/12 0.012 0.12  -0.043 3/12 0.034 0.25  -0.009 4/12 0.424 0.62  +0.004 5/12 0.970 0.88  +0.008 6/12 0.733 1.00
+  QOTc-Ang-HSsrc - none-Ang-HSsrc     -0.022 4/12 0.233 0.12  -0.014 5/12 0.569 0.62  +0.021 9/12 0.204 0.62  +0.018 8/12 0.266 0.62  +0.008 8/12 0.622 0.62
+  QOTc-Ang-PCA - none-Ang-PCA         -0.045 1/12 0.002 0.12  -0.024 2/12 0.034 0.12  -0.024 4/12 0.064 0.25  -0.007 5/12 0.339 1.00  +0.004 6/12 0.791 0.88
+  SDM-Ang-HS4 - none-Ang-HS4          -0.046 3/12 0.021 0.12  -0.031 4/12 0.204 0.38  -0.024 3/12 0.064 0.25  -0.022 4/12 0.176 0.38  +0.003 5/12 0.733 0.88
+  SDM-Ang-HSsrc - none-Ang-HSsrc      -0.040 4/12 0.064 0.12  -0.022 6/12 0.677 0.62  +0.032 8/12 0.176 0.62  +0.028 8/12 0.151 0.62  +0.029 9/12 0.151 0.62
+  SDM-Ang-PCA - none-Ang-PCA          -0.046 2/12 0.005 0.12  -0.006 6/12 0.910 1.00  -0.005 6/12 0.569 0.88  -0.007 6/12 0.733 0.88  -0.007 5/12 0.791 1.00
+  QOTu-Ang-HS4 - SDM-Ang-HS4         +0.042 11/12 0.009 0.12  +0.039 9/12 0.110 0.38  +0.033 9/12 0.092 0.25  +0.036 9/12 0.077 0.38  -0.005 6/12 1.000 0.88
+  QOTu-Ang-HSsrc - SDM-Ang-HSsrc      +0.039 9/12 0.027 0.12  +0.023 8/12 0.301 0.62  -0.030 5/12 0.233 0.62  -0.026 5/12 0.266 0.62  -0.020 4/12 0.339 0.62
+  QOTu-Ang-PCA - SDM-Ang-PCA         +0.049 11/12 0.002 0.12  -0.004 7/12 0.970 0.88  -0.003 6/12 0.970 0.88  +0.003 7/12 0.970 0.88  +0.010 6/12 0.569 0.88
+  QOTu-Ang-HSsrc - TargetOnly         +0.030 8/12 0.110 0.12  -0.003 6/12 0.850 0.88  -0.017 5/12 0.424 0.62  -0.023 5/12 0.470 1.00  -0.025 5/12 0.339 0.88
+  TargetOnly - NoAdapt                -0.071 2/12 0.003 0.12  -0.035 4/12 0.151 0.62  -0.021 4/12 0.129 0.25  -0.015 4/12 0.301 0.88  -0.005 5/12 0.519 0.88
+  COT - NoAdapt                       -0.097 0/12 0.000 0.12  -0.060 2/12 0.016 0.12  -0.034 3/12 0.052 0.25  -0.024 3/12 0.151 0.38  -0.030 4/12 0.151 0.62
+
+  PER TARGET SITE   QOTu-Ang-HSsrc minus none-Ang-HSsrc  (n = 4 independent units)
+       5%  HTL -0.014  PTT +0.007  RTT -0.011  WRM +0.014   |  2/4 positive
+      10%  HTL -0.010  PTT +0.005  RTT -0.004  WRM +0.015   |  2/4 positive
+      20%  HTL -0.009  PTT +0.003  RTT +0.005  WRM +0.010   |  3/4 positive
+      30%  HTL -0.013  PTT +0.003  RTT +0.008  WRM +0.010   |  3/4 positive
+      50%  HTL -0.008  PTT +0.005  RTT +0.017  WRM +0.022   |  3/4 positive
+
+----------------------------------------------------------------------------------------------
+[Ang encoding] Left rail, random arc   mean BAC over 12 pairs (sd across pairs) [sd across the 4 target sites]
+----------------------------------------------------------------------------------------------
+  method                     uses                      5%                     10%                     20%                     30%                     50%      n
+  NoAdapt                 nothing   0.560 (0.053) [0.032]   0.560 (0.053) [0.032]   0.560 (0.053) [0.032]   0.560 (0.053) [0.032]   0.560 (0.053) [0.032]    480
+  TargetOnly           arc labels   0.499 (0.029) [0.033]   0.520 (0.049) [0.054]   0.534 (0.041) [0.046]   0.541 (0.031) [0.034]   0.554 (0.052) [0.058]    471
+  Source+Target        arc labels   0.558 (0.045) [0.035]   0.557 (0.033) [0.027]   0.559 (0.035) [0.030]   0.556 (0.036) [0.032]   0.555 (0.039) [0.034]    471
+  COT                  arc labels   0.502 (0.028) [0.030]   0.505 (0.037) [0.039]   0.512 (0.029) [0.031]   0.513 (0.020) [0.021]   0.530 (0.050) [0.053]    471
+  none-Ang-HS4         arc labels   0.526 (0.034) [0.021]   0.527 (0.031) [0.020]   0.526 (0.032) [0.018]   0.525 (0.031) [0.019]   0.528 (0.034) [0.023]    471
+  none-Ang-HSsrc          nothing   0.520 (0.056) [0.035]   0.520 (0.056) [0.035]   0.520 (0.056) [0.035]   0.520 (0.056) [0.035]   0.520 (0.056) [0.035]    480
+  none-Ang-PCA       arc segments   0.527 (0.026) [0.011]   0.523 (0.031) [0.017]   0.525 (0.029) [0.012]   0.529 (0.036) [0.024]   0.530 (0.034) [0.019]    480
+  QOTu-Ang-HS4         arc labels   0.526 (0.031) [0.021]   0.532 (0.036) [0.022]   0.527 (0.038) [0.023]   0.525 (0.032) [0.022]   0.527 (0.027) [0.020]    471
+  QOTu-Ang-HSsrc     arc segments   0.527 (0.047) [0.028]   0.527 (0.047) [0.027]   0.527 (0.048) [0.026]   0.527 (0.048) [0.026]   0.529 (0.050) [0.027]    480
+  QOTu-Ang-PCA       arc segments   0.528 (0.035) [0.014]   0.529 (0.034) [0.012]   0.528 (0.030) [0.015]   0.530 (0.033) [0.016]   0.532 (0.034) [0.021]    480
+  QOTc-Ang-HS4         arc labels   0.491 (0.024) [0.020]   0.510 (0.033) [0.034]   0.519 (0.031) [0.030]   0.533 (0.037) [0.038]   0.536 (0.041) [0.043]    471
+  QOTc-Ang-HSsrc       arc labels   0.524 (0.038) [0.017]   0.528 (0.039) [0.026]   0.524 (0.048) [0.039]   0.528 (0.052) [0.045]   0.528 (0.057) [0.045]    471
+  QOTc-Ang-PCA         arc labels   0.508 (0.021) [0.020]   0.513 (0.016) [0.013]   0.530 (0.025) [0.024]   0.536 (0.028) [0.021]   0.534 (0.036) [0.029]    471
+  SDM-Ang-HS4          arc labels   0.478 (0.019) [0.017]   0.497 (0.029) [0.031]   0.521 (0.049) [0.053]   0.526 (0.041) [0.043]   0.531 (0.050) [0.053]    471
+  SDM-Ang-HSsrc        arc labels   0.515 (0.043) [0.039]   0.526 (0.042) [0.045]   0.532 (0.048) [0.038]   0.537 (0.045) [0.040]   0.549 (0.048) [0.042]    471
+  SDM-Ang-PCA          arc labels   0.492 (0.027) [0.025]   0.511 (0.017) [0.011]   0.521 (0.039) [0.038]   0.524 (0.030) [0.032]   0.522 (0.027) [0.025]    471
+
+  ISOLATED CONTRASTS   mean  wins/12  p(12 pairs)  p(4 sites, floor 0.125)
+  contrast                                                5%                     10%                     20%                     30%                     50%
+  QOTu-Ang-HS4 - none-Ang-HS4         -0.000 6/12 0.970 1.00  +0.005 8/12 0.380 0.38  +0.001 6/12 0.850 0.88  +0.000 6/12 0.970 0.88  -0.001 6/12 0.910 0.88
+  QOTu-Ang-HSsrc - none-Ang-HSsrc     +0.007 8/12 0.233 0.38  +0.007 9/12 0.204 0.38  +0.008 8/12 0.266 0.38  +0.008 8/12 0.301 0.38  +0.009 9/12 0.204 0.38
+  QOTu-Ang-PCA - none-Ang-PCA         +0.001 7/12 0.850 1.00  +0.005 8/12 0.339 0.62  +0.003 7/12 0.677 0.62  +0.002 6/12 0.970 0.88  +0.003 8/12 0.470 0.62
+  QOTc-Ang-HS4 - none-Ang-HS4         -0.035 3/12 0.009 0.12  -0.016 5/12 0.301 0.62  -0.006 4/12 0.424 0.62  +0.008 6/12 0.677 0.88  +0.008 6/12 0.733 1.00
+  QOTc-Ang-HSsrc - none-Ang-HSsrc     +0.004 6/12 0.791 0.62  +0.008 8/12 0.519 0.62  +0.005 7/12 0.622 1.00  +0.008 8/12 0.677 0.62  +0.008 8/12 0.622 0.62
+  QOTc-Ang-PCA - none-Ang-PCA         -0.020 5/12 0.110 0.38  -0.010 5/12 0.380 0.38  +0.005 9/12 0.380 0.88  +0.008 7/12 0.569 0.88  +0.004 6/12 0.791 0.88
+  SDM-Ang-HS4 - none-Ang-HS4          -0.048 2/12 0.003 0.12  -0.029 3/12 0.052 0.25  -0.005 4/12 0.850 0.88  +0.001 5/12 0.910 0.88  +0.003 5/12 0.733 0.88
+  SDM-Ang-HSsrc - none-Ang-HSsrc      -0.005 7/12 0.791 0.88  +0.007 6/12 0.677 0.88  +0.013 7/12 0.339 0.88  +0.018 8/12 0.233 0.62  +0.029 9/12 0.151 0.62
+  SDM-Ang-PCA - none-Ang-PCA          -0.036 1/12 0.001 0.12  -0.012 6/12 0.380 0.38  -0.004 5/12 0.791 1.00  -0.005 7/12 0.677 0.88  -0.007 5/12 0.791 1.00
+  QOTu-Ang-HS4 - SDM-Ang-HS4         +0.047 11/12 0.001 0.12  +0.034 9/12 0.034 0.25  +0.006 7/12 0.677 0.88  -0.001 6/12 0.910 0.88  -0.005 6/12 1.000 0.88
+  QOTu-Ang-HSsrc - SDM-Ang-HSsrc      +0.012 6/12 0.569 0.88  +0.000 6/12 0.970 1.00  -0.005 5/12 0.677 0.88  -0.010 4/12 0.569 0.62  -0.020 4/12 0.339 0.62
+  QOTu-Ang-PCA - SDM-Ang-PCA         +0.037 10/12 0.021 0.12  +0.018 9/12 0.064 0.12  +0.007 7/12 0.791 0.88  +0.006 5/12 0.850 1.00  +0.010 6/12 0.569 0.88
+  QOTu-Ang-HSsrc - TargetOnly         +0.028 8/12 0.176 0.38  +0.007 8/12 0.733 0.88  -0.006 6/12 0.850 1.00  -0.013 5/12 0.470 1.00  -0.025 5/12 0.339 0.88
+  TargetOnly - NoAdapt                -0.060 1/12 0.007 0.12  -0.040 3/12 0.064 0.25  -0.026 3/12 0.077 0.25  -0.019 4/12 0.233 0.25  -0.005 5/12 0.519 0.88
+  COT - NoAdapt                       -0.057 2/12 0.016 0.12  -0.055 2/12 0.016 0.12  -0.048 2/12 0.012 0.12  -0.047 3/12 0.027 0.12  -0.030 4/12 0.151 0.62
+
+  PER TARGET SITE   QOTu-Ang-HSsrc minus none-Ang-HSsrc  (n = 4 independent units)
+       5%  HTL -0.011  PTT +0.006  RTT +0.017  WRM +0.017   |  3/4 positive
+      10%  HTL -0.012  PTT +0.005  RTT +0.017  WRM +0.018   |  3/4 positive
+      20%  HTL -0.009  PTT +0.005  RTT +0.014  WRM +0.020   |  3/4 positive
+      30%  HTL -0.011  PTT +0.004  RTT +0.016  WRM +0.021   |  3/4 positive
+      50%  HTL -0.008  PTT +0.005  RTT +0.017  WRM +0.022   |  3/4 positive
+
+==============================================================================================
+STAGE 2  PERMUTATION   does the method need the SOURCE, or the ARC labels?
+==============================================================================================
+  >>> SUPERSEDED. This stage ran at FOUR rotations. The paper uses the eight-rotation
+  >>> rerun (rerun_perm8.py -> perm8_Ang.csv). See qot_results/SENSITIVITY_REPORT.txt for every number in the paper.
+
+loss(src)  real minus source-labels-scrambled. A method that genuinely
+           transfers from the source site must lose accuracy here.
+loss(arc)  real minus arc-labels-scrambled. Exactly zero means the method
+           never touches a target label.
+TargetOnly must show loss(src) of exactly 0.0000 on every fold, which is the
+built-in control confirming the test itself is sound.
+
+
+----------------------------------------------------------------------------------------------
+Right rail
+----------------------------------------------------------------------------------------------
+  method                     uses    real  srcperm  arcperm  loss(src)        p  loss(arc)   verdict
+  NoAdapt                 nothing  0.5796   0.5162   0.5796    +0.0634   0.0000    +0.0000   uses the source
+  TargetOnly           arc labels  0.6288   0.6288   0.4898    +0.0000   1.0000    +0.1391   SOURCE IRRELEVANT
+  Source+Target        arc labels  0.5935   0.5779   0.5867    +0.0156   0.0087    +0.0068   weak
+  COT                  arc labels  0.5572   0.5532   0.4781    +0.0040   0.0312    +0.0790   SOURCE IRRELEVANT
+  none-Ang-HS4         arc labels  0.5519   0.5051   0.5476    +0.0468   0.0000    +0.0043   uses the source
+  none-Ang-HSsrc          nothing  0.5578   0.5116   0.5578    +0.0461   0.0000    +0.0000   uses the source
+  none-Ang-PCA       arc segments  0.5322   0.5099   0.5322    +0.0224   0.1958    +0.0000   weak
+  QOTu-Ang-HS4         arc labels  0.6036   0.5199   0.5985    +0.0837   0.0000    +0.0051   uses the source
+  QOTu-Ang-HSsrc     arc segments  0.5994   0.5138   0.5994    +0.0857   0.0000    +0.0000   uses the source
+  QOTu-Ang-PCA       arc segments  0.5704   0.5080   0.5704    +0.0624   0.0000    +0.0000   uses the source
+  QOTc-Ang-HS4         arc labels  0.6195   0.6087   0.5262    +0.0108   0.0018    +0.0933   weak
+  QOTc-Ang-HSsrc       arc labels  0.5992   0.5629   0.5485    +0.0363   0.0000    +0.0507   uses the source
+  QOTc-Ang-PCA         arc labels  0.5510   0.5441   0.4907    +0.0069   0.1001    +0.0603   SOURCE IRRELEVANT
+  SDM-Ang-HS4          arc labels  0.6039   0.5966   0.4823    +0.0073   0.0335    +0.1215   SOURCE IRRELEVANT
+  SDM-Ang-HSsrc        arc labels  0.6026   0.5771   0.4854    +0.0255   0.0059    +0.1173   weak
+  SDM-Ang-PCA          arc labels  0.5415   0.5478   0.4891    -0.0064   0.2641    +0.0524   SOURCE IRRELEVANT
+
+----------------------------------------------------------------------------------------------
+Left rail
+----------------------------------------------------------------------------------------------
+  method                     uses    real  srcperm  arcperm  loss(src)        p  loss(arc)   verdict
+  NoAdapt                 nothing  0.5687   0.4986   0.5687    +0.0701   0.0000    +0.0000   uses the source
+  TargetOnly           arc labels  0.5396   0.5396   0.4932    +0.0000   1.0000    +0.0464   SOURCE IRRELEVANT
+  Source+Target        arc labels  0.5655   0.5346   0.5635    +0.0309   0.0000    +0.0020   uses the source
+  COT                  arc labels  0.5058   0.5056   0.4838    +0.0002   0.5328    +0.0221   SOURCE IRRELEVANT
+  none-Ang-HS4         arc labels  0.5308   0.4945   0.5294    +0.0363   0.0000    +0.0015   uses the source
+  none-Ang-HSsrc          nothing  0.5258   0.4949   0.5258    +0.0309   0.0000    +0.0000   uses the source
+  none-Ang-PCA       arc segments  0.5354   0.4952   0.5354    +0.0402   0.0000    +0.0000   uses the source
+  QOTu-Ang-HS4         arc labels  0.5319   0.4854   0.5349    +0.0465   0.0000    -0.0030   uses the source
+  QOTu-Ang-HSsrc     arc segments  0.5342   0.4870   0.5342    +0.0472   0.0000    +0.0000   uses the source
+  QOTu-Ang-PCA       arc segments  0.5310   0.4923   0.5310    +0.0387   0.0000    +0.0000   uses the source
+  QOTc-Ang-HS4         arc labels  0.5163   0.5118   0.4964    +0.0045   0.1736    +0.0199   SOURCE IRRELEVANT
+  QOTc-Ang-HSsrc       arc labels  0.5386   0.5393   0.5076    -0.0007   0.7211    +0.0310   SOURCE IRRELEVANT
+  QOTc-Ang-PCA         arc labels  0.5282   0.5202   0.4934    +0.0080   0.0907    +0.0348   SOURCE IRRELEVANT
+  SDM-Ang-HS4          arc labels  0.5110   0.5090   0.4883    +0.0019   0.2092    +0.0226   SOURCE IRRELEVANT
+  SDM-Ang-HSsrc        arc labels  0.5484   0.5457   0.5007    +0.0027   0.8843    +0.0478   SOURCE IRRELEVANT
+  SDM-Ang-PCA          arc labels  0.5222   0.5217   0.4919    +0.0005   0.9504    +0.0303   SOURCE IRRELEVANT
+
+==============================================================================================
+STAGE 3  SWEEPS   sensitivity to the two regularisation constants
+==============================================================================================
+  >>> SUPERSEDED. This stage ran at FOUR rotations. The paper uses the eight-rotation
+  >>> rerun (rerun_sweeps8.py -> sweeps8_Ang.csv). See qot_results/SENSITIVITY_REPORT.txt for every number in the paper.
+
+  How close to singular are the class-mean density matrices?
+  (EPS can only matter if some eigenvalue is comparable to it)
+
+  site    class      n        e0        e1        e2        e3        e4        e5        e6        e7
+  HTL         0    637  4.63e-01  2.22e-01  8.21e-02  6.59e-02  5.46e-02  4.23e-02  2.75e-02  1.43e-02  1.26e-02  5.26e-03  5.03e-03  2.67e-03  1.46e-03  1.18e-03  3.45e-04  1.13e-04
+  HTL         1    166  4.29e-01  2.59e-01  9.20e-02  7.03e-02  5.78e-02  3.24e-02  2.61e-02  1.54e-02  6.24e-03  5.48e-03  2.78e-03  2.13e-03  6.06e-04  1.40e-04  2.80e-05  6.22e-07
+  PTT         0   2151  6.61e-01  9.20e-02  7.36e-02  7.13e-02  5.83e-02  1.17e-02  1.03e-02  8.31e-03  6.48e-03  3.88e-03  1.01e-03  8.67e-04  6.95e-04  1.04e-04  4.68e-05  1.62e-06
+  PTT         1    121  6.99e-01  1.06e-01  8.38e-02  5.80e-02  2.71e-02  9.68e-03  8.36e-03  4.47e-03  2.22e-03  8.22e-04  5.30e-04  9.38e-06  2.71e-06  6.61e-07  1.59e-07  2.14e-08
+  RTT         0   4177  6.05e-01  1.96e-01  9.14e-02  4.65e-02  2.57e-02  1.61e-02  6.82e-03  5.19e-03  3.83e-03  1.73e-03  4.67e-04  3.84e-04  2.58e-04  5.70e-05  3.58e-05  3.87e-06
+  RTT         1     82  4.62e-01  2.33e-01  1.30e-01  6.10e-02  4.71e-02  3.35e-02  1.73e-02  8.00e-03  3.04e-03  2.72e-03  1.54e-03  1.02e-04  9.09e-06  8.43e-07  8.82e-08 -6.42e-20
+  WRM         0    958  6.00e-01  1.48e-01  1.08e-01  8.90e-02  2.96e-02  1.03e-02  5.59e-03  4.37e-03  2.61e-03  8.91e-04  8.16e-04  3.46e-04  2.43e-04  6.14e-07  1.91e-07  1.66e-08
+  WRM         1     59  6.47e-01  1.11e-01  7.94e-02  6.90e-02  5.76e-02  1.53e-02  9.83e-03  6.48e-03  3.53e-03  7.76e-04  2.28e-04  1.25e-04  2.11e-06  8.15e-21 -1.86e-21 -2.90e-19
+
+  smallest eigenvalue anywhere = -2.90e-19, default EPS = 1e-09, ratio -0x
+
+----------------------------------------------------------------------------------------------
+EPS SWEEP   mean BAC over the 12 pairs (sd across pairs)
+----------------------------------------------------------------------------------------------
+
+  budget 5%
+    method                    1e-12          1e-10          1e-09          1e-08          1e-06         0.0001           0.01
+    QOTc-HS4           0.576(0.083)   0.576(0.083)   0.576(0.083)   0.576(0.083)   0.581(0.088)   0.581(0.086)   0.589(0.091)
+    QOTc-HSsrc         0.600(0.132)   0.600(0.132)   0.600(0.132)   0.600(0.132)   0.603(0.129)   0.605(0.137)   0.605(0.125)
+    QOTc-PCA           0.529(0.047)   0.529(0.047)   0.529(0.047)   0.529(0.047)   0.528(0.044)   0.528(0.043)   0.525(0.040)
+    QOTu-HS4           0.625(0.098)   0.625(0.098)   0.625(0.098)   0.625(0.098)   0.626(0.098)   0.625(0.099)   0.610(0.100)
+    QOTu-HSsrc         0.630(0.093)   0.630(0.093)   0.630(0.093)   0.630(0.093)   0.630(0.093)   0.630(0.093)   0.624(0.094)
+    QOTu-PCA           0.576(0.090)   0.576(0.090)   0.576(0.090)   0.576(0.090)   0.579(0.090)   0.586(0.088)   0.568(0.048)
+    none-HS4           0.545(0.083)   0.545(0.083)   0.545(0.083)   0.545(0.083)   0.545(0.083)   0.545(0.083)   0.545(0.083)
+    none-HSsrc         0.564(0.096)   0.564(0.096)   0.564(0.096)   0.564(0.096)   0.564(0.096)   0.564(0.096)   0.564(0.096)
+    none-PCA           0.549(0.112)   0.549(0.112)   0.549(0.112)   0.549(0.112)   0.549(0.112)   0.549(0.112)   0.549(0.112)
+
+  budget 50%
+    method                    1e-12          1e-10          1e-09          1e-08          1e-06         0.0001           0.01
+    QOTc-HS4           0.645(0.080)   0.645(0.080)   0.645(0.080)   0.645(0.080)   0.645(0.080)   0.647(0.078)   0.646(0.076)
+    QOTc-HSsrc         0.608(0.066)   0.608(0.066)   0.608(0.066)   0.608(0.066)   0.608(0.066)   0.610(0.070)   0.605(0.065)
+    QOTc-PCA           0.570(0.058)   0.570(0.058)   0.570(0.058)   0.570(0.058)   0.570(0.058)   0.566(0.065)   0.570(0.069)
+    QOTu-HS4           0.601(0.064)   0.601(0.064)   0.601(0.064)   0.601(0.064)   0.601(0.064)   0.602(0.064)   0.598(0.066)
+    QOTu-HSsrc         0.596(0.061)   0.596(0.061)   0.596(0.061)   0.596(0.061)   0.596(0.061)   0.596(0.062)   0.595(0.060)
+    QOTu-PCA           0.564(0.088)   0.564(0.088)   0.564(0.088)   0.564(0.088)   0.573(0.082)   0.573(0.083)   0.591(0.075)
+    none-HS4           0.555(0.082)   0.555(0.082)   0.555(0.082)   0.555(0.082)   0.555(0.082)   0.555(0.082)   0.555(0.082)
+    none-HSsrc         0.557(0.078)   0.557(0.078)   0.557(0.078)   0.557(0.078)   0.557(0.078)   0.557(0.078)   0.557(0.078)
+    none-PCA           0.532(0.098)   0.532(0.098)   0.532(0.098)   0.532(0.098)   0.532(0.098)   0.532(0.098)   0.532(0.098)
+
+  headline contrast at each EPS   QOTu-HSsrc minus none-HSsrc
+    budget              1e-12            1e-10            1e-09            1e-08            1e-06           0.0001             0.01
+          5%     +0.066 10/12     +0.066 10/12     +0.066 10/12     +0.066 10/12     +0.066 10/12     +0.066 10/12      +0.060 9/12
+         50%     +0.039 10/12     +0.039 10/12     +0.039 10/12     +0.039 10/12     +0.039 10/12     +0.039 10/12     +0.038 10/12
+
+----------------------------------------------------------------------------------------------
+OTREG SWEEP   mean BAC over the 12 pairs (sd across pairs)
+----------------------------------------------------------------------------------------------
+
+  budget 5%
+    method                    0.001          0.005           0.01           0.05            0.1            0.5
+    COT                0.576(0.089)   0.574(0.085)   0.571(0.085)   0.543(0.059)   0.526(0.047)   0.522(0.055)
+    SDM-HS4            0.548(0.073)   0.562(0.076)   0.562(0.077)   0.565(0.086)   0.572(0.101)   0.572(0.107)
+    SDM-HSsrc          0.564(0.128)   0.559(0.121)   0.560(0.122)   0.563(0.121)   0.563(0.124)   0.560(0.134)
+    SDM-PCA            0.525(0.036)   0.509(0.058)   0.510(0.048)   0.519(0.064)   0.542(0.063)   0.574(0.119)
+
+  budget 50%
+    method                    0.001          0.005           0.01           0.05            0.1            0.5
+    COT                0.637(0.071)   0.637(0.073)   0.629(0.073)   0.562(0.045)   0.556(0.047)   0.572(0.035)
+    SDM-HS4            0.634(0.066)   0.640(0.065)   0.642(0.064)   0.646(0.067)   0.645(0.070)   0.631(0.071)
+    SDM-HSsrc          0.620(0.053)   0.616(0.049)   0.615(0.048)   0.616(0.048)   0.618(0.052)   0.598(0.039)
+    SDM-PCA            0.567(0.047)   0.585(0.055)   0.581(0.052)   0.570(0.044)   0.565(0.058)   0.606(0.058)
+
+  QOTu-HSsrc (no epsilon to tune) minus the swept classical method
+    budget              0.001            0.005             0.01             0.05              0.1              0.5
+          5%     +0.066 11/12     +0.071 11/12     +0.070 11/12      +0.067 9/12      +0.067 9/12     +0.069 10/12
+         50%      -0.024 5/12      -0.020 5/12      -0.018 5/12      -0.020 5/12      -0.022 2/12      -0.001 6/12
+
+==============================================================================================
+STAGE 3b  ALPHA SWEEP   how far theta is kept off the Bloch poles
+==============================================================================================
+  >>> SUPERSEDED. This stage ran at FOUR rotations. The paper uses the eight-rotation
+  >>> rerun (rerun_sweeps8.py -> alpha8_Ang.csv). See qot_results/SENSITIVITY_REPORT.txt for every number in the paper.
+
+theta is mapped into [alpha*pi, (1-alpha)*pi]. At a pole the qubit state is
+|0> or |1> and phi has no effect on rho, so the CENTRE channel for that index
+is destroyed for that segment. The weight phi carries in rho is exactly
+sin(theta), so alpha sets the worst case.
+
+    alpha    worst-case phi weight = sin(alpha*pi)
+          0.010    0.031
+    0.025    0.078
+    0.050    0.156
+    0.100    0.309
+
+Larger alpha protects the centre channel and compresses the own-rail range.
+alpha = 0.01 is the primary setting, the minimal intervention that removes the
+degeneracy. The rest is the sensitivity analysis.
+
+  alpha = 0.01 done
+  alpha = 0.025 done
+  alpha = 0.05 done
+  alpha = 0.1 done
+
+----------------------------------------------------------------------------------------------
+angle encoding, budget 5%, right rail, contiguous arc
+----------------------------------------------------------------------------------------------
+  method                   a=0.01        a=0.025         a=0.05          a=0.1
+  NoAdapt            0.569(0.073)   0.569(0.073)   0.569(0.073)   0.569(0.073)
+  TargetOnly         0.612(0.084)   0.612(0.084)   0.612(0.084)   0.612(0.084)
+  Source+Target      0.587(0.061)   0.587(0.061)   0.587(0.061)   0.587(0.061)
+  COT                0.543(0.059)   0.543(0.059)   0.543(0.059)   0.543(0.059)
+  none-Ang-HS4       0.545(0.083)   0.546(0.084)   0.554(0.083)   0.556(0.081)
+  none-Ang-HSsrc     0.564(0.096)   0.565(0.096)   0.561(0.078)   0.563(0.076)
+  none-Ang-PCA       0.549(0.112)   0.543(0.118)   0.520(0.100)   0.529(0.100)
+  QOTu-Ang-HS4       0.625(0.098)   0.626(0.098)   0.626(0.099)   0.615(0.071)
+  QOTu-Ang-HSsrc     0.630(0.093)   0.629(0.094)   0.631(0.094)   0.621(0.064)
+  QOTu-Ang-PCA       0.576(0.090)   0.579(0.084)   0.593(0.082)   0.612(0.071)
+  QOTc-Ang-HS4       0.576(0.084)   0.590(0.107)   0.599(0.116)   0.595(0.130)
+  QOTc-Ang-HSsrc     0.600(0.132)   0.598(0.128)   0.608(0.131)   0.604(0.117)
+  QOTc-Ang-PCA       0.528(0.048)   0.512(0.063)   0.523(0.058)   0.522(0.060)
+  SDM-Ang-HS4        0.565(0.086)   0.566(0.081)   0.569(0.075)   0.566(0.063)
+  SDM-Ang-HSsrc      0.563(0.121)   0.576(0.108)   0.586(0.101)   0.588(0.093)
+  SDM-Ang-PCA        0.519(0.064)   0.518(0.074)   0.516(0.080)   0.529(0.068)
+
+  headline contrast at each alpha   QOTu-Ang-HSsrc minus none-Ang-HSsrc
+                       +0.066 10/12     +0.064 10/12     +0.069 11/12     +0.058 10/12
+
+----------------------------------------------------------------------------------------------
+angle encoding, budget 50%, right rail, contiguous arc
+----------------------------------------------------------------------------------------------
+  method                   a=0.01        a=0.025         a=0.05          a=0.1
+  NoAdapt            0.579(0.085)   0.579(0.085)   0.579(0.085)   0.579(0.085)
+  TargetOnly         0.641(0.060)   0.641(0.060)   0.641(0.060)   0.641(0.060)
+  Source+Target      0.608(0.071)   0.608(0.071)   0.608(0.071)   0.608(0.071)
+  COT                0.562(0.045)   0.562(0.045)   0.562(0.045)   0.562(0.045)
+  none-Ang-HS4       0.555(0.082)   0.559(0.087)   0.563(0.089)   0.567(0.090)
+  none-Ang-HSsrc     0.557(0.078)   0.559(0.078)   0.561(0.073)   0.565(0.075)
+  none-Ang-PCA       0.532(0.098)   0.534(0.100)   0.529(0.104)   0.537(0.103)
+  QOTu-Ang-HS4       0.601(0.064)   0.601(0.066)   0.603(0.066)   0.606(0.071)
+  QOTu-Ang-HSsrc     0.596(0.061)   0.596(0.061)   0.600(0.067)   0.602(0.070)
+  QOTu-Ang-PCA       0.564(0.088)   0.582(0.087)   0.575(0.092)   0.587(0.087)
+  QOTc-Ang-HS4       0.645(0.080)   0.647(0.080)   0.653(0.080)   0.656(0.070)
+  QOTc-Ang-HSsrc     0.608(0.066)   0.613(0.071)   0.613(0.064)   0.615(0.063)
+  QOTc-Ang-PCA       0.571(0.057)   0.573(0.059)   0.571(0.050)   0.574(0.055)
+  SDM-Ang-HS4        0.646(0.067)   0.639(0.063)   0.640(0.063)   0.629(0.058)
+  SDM-Ang-HSsrc      0.616(0.048)   0.620(0.049)   0.624(0.055)   0.623(0.056)
+  SDM-Ang-PCA        0.570(0.044)   0.572(0.040)   0.574(0.060)   0.559(0.053)
+
+  headline contrast at each alpha   QOTu-Ang-HSsrc minus none-Ang-HSsrc
+                       +0.039 10/12     +0.037 10/12     +0.038 11/12     +0.037 10/12
+
+==============================================================================================
+STAGE 4  BOOTSTRAP   moving-block 95% intervals on individual cells
+==============================================================================================
+
+The fitted model is held FIXED and only the evaluation sample is resampled,
+which is the quantity in question: how precisely does this model's balanced
+accuracy on this site's track pin down. Segments are resampled in contiguous
+BLOCKS, since adjacent track is correlated and independent draws would give
+intervals far too narrow. Block length is measured from the label
+autocorrelation, not chosen. Contrasts are PAIRED, both methods scored on the
+same resampled blocks.
+
+Only folds whose arc holds both classes are used, so all 16 methods sit on
+identical folds and every paired contrast is legitimate.
+
+  block length from the label autocorrelation:  HTL 10 segs   PTT 21 segs   RTT 30 segs   WRM 14 segs
+  B = 2000
+
+
+----------------------------------------------------------------------------------------------
+PER-CELL INTERVALS, budget 5%, right rail, contiguous arc
+----------------------------------------------------------------------------------------------
+  pair           eval   pos |        none-Ang-HSsrc        QOTu-Ang-HSsrc |               difference
+  HTL->PTT      1136    67 |   0.519 [0.500,0.541]   0.572 [0.541,0.601] | +0.053 [+0.023,+0.082] *
+  HTL->RTT      2129     6 |   0.575 [0.492,0.767]   0.596 [0.468,0.763] | +0.021 [-0.071,+0.095]  
+  HTL->WRM       508    32 |   0.516 [0.479,0.588]   0.587 [0.547,0.626] | +0.071 [-0.011,+0.121]  
+  PTT->HTL       401    82 |   0.501 [0.468,0.530]   0.550 [0.521,0.579] | +0.050 [+0.031,+0.072] *
+  PTT->RTT      2129     6 |   0.456 [0.435,0.473]   0.788 [0.608,0.886] | +0.332 [+0.151,+0.427] *
+  PTT->WRM       508    32 |   0.549 [0.470,0.622]   0.553 [0.468,0.625] | +0.004 [-0.009,+0.028]  
+  RTT->HTL       401    82 |   0.570 [0.539,0.594]   0.589 [0.562,0.613] | +0.019 [-0.003,+0.045]  
+  RTT->PTT      1136    67 |   0.443 [0.409,0.486]   0.494 [0.471,0.518] | +0.051 [+0.015,+0.080] *
+  RTT->WRM       508    32 |   0.598 [0.486,0.679]   0.577 [0.484,0.639] | -0.021 [-0.063,+0.022]  
+  WRM->HTL       401    82 |   0.529 [0.516,0.543]   0.571 [0.541,0.598] | +0.042 [+0.013,+0.067] *
+  WRM->PTT      1136    67 |   0.593 [0.546,0.625]   0.603 [0.545,0.642] | +0.010 [-0.035,+0.047]  
+  WRM->RTT      2129     6 |   0.830 [0.651,0.926]   0.823 [0.643,0.919] | -0.007 [-0.013,-0.003] -
+
+  ALL 16 METHODS, mean and median interval width
+  method                     uses     mean  median CI width
+  NoAdapt                 nothing    0.558            0.064
+  TargetOnly           arc labels    0.553            0.123
+  Source+Target        arc labels    0.565            0.088
+  COT                  arc labels    0.552            0.103
+  none-Ang-HS4         arc labels    0.542            0.069
+  none-Ang-HSsrc          nothing    0.557            0.078
+  none-Ang-PCA       arc segments    0.529            0.096
+  QOTu-Ang-HS4         arc labels    0.610            0.094
+  QOTu-Ang-HSsrc     arc segments    0.609            0.088
+  QOTu-Ang-PCA       arc segments    0.589            0.096
+  QOTc-Ang-HS4         arc labels    0.518            0.053
+  QOTc-Ang-HSsrc       arc labels    0.541            0.114
+  QOTc-Ang-PCA         arc labels    0.529            0.062
+  SDM-Ang-HS4          arc labels    0.521            0.047
+  SDM-Ang-HSsrc        arc labels    0.537            0.105
+  SDM-Ang-PCA          arc labels    0.521            0.091
+
+  PAIRED CONTRASTS   (intervals excluding zero, out of 12 pairs)
+  contrast                               mean   +ve   -ve  spans 0  median width
+  QOTu-Ang-HS4 - none-Ang-HS4          +0.068     5     0        7         0.077
+  QOTu-Ang-HSsrc - none-Ang-HSsrc      +0.052     5     1        6         0.062
+  QOTu-Ang-PCA - none-Ang-PCA          +0.060     6     1        5         0.093
+  QOTc-Ang-HS4 - none-Ang-HS4          -0.025     2     4        6         0.102
+  QOTc-Ang-HSsrc - none-Ang-HSsrc      -0.016     2     2        8         0.120
+  QOTc-Ang-PCA - none-Ang-PCA          -0.001     3     2        7         0.154
+  SDM-Ang-HS4 - none-Ang-HS4           -0.021     3     4        5         0.112
+  SDM-Ang-HSsrc - none-Ang-HSsrc       -0.020     1     3        8         0.120
+  SDM-Ang-PCA - none-Ang-PCA           -0.009     3     2        7         0.139
+  QOTu-Ang-HS4 - SDM-Ang-HS4           +0.089     9     0        3         0.115
+  QOTu-Ang-HSsrc - SDM-Ang-HSsrc       +0.072     5     0        7         0.143
+  QOTu-Ang-PCA - SDM-Ang-PCA           +0.068     7     0        5         0.114
+  QOTu-Ang-HSsrc - TargetOnly          +0.056     4     0        8         0.160
+  TargetOnly - NoAdapt                 -0.005     2     4        6         0.152
+  COT - NoAdapt                        -0.007     2     4        6         0.127
+
+----------------------------------------------------------------------------------------------
+PER-CELL INTERVALS, budget 50%, right rail, contiguous arc
+----------------------------------------------------------------------------------------------
+  pair           eval   pos |        none-Ang-HSsrc        QOTu-Ang-HSsrc |               difference
+  HTL->PTT      1136    80 |   0.526 [0.508,0.544]   0.549 [0.523,0.568] | +0.023 [+0.004,+0.037] *
+  HTL->RTT      2129    47 |   0.595 [0.545,0.659]   0.641 [0.580,0.690] | +0.047 [-0.002,+0.088]  
+  HTL->WRM       508    32 |   0.507 [0.489,0.536]   0.566 [0.530,0.597] | +0.059 [+0.016,+0.093] *
+  PTT->HTL       401    82 |   0.501 [0.468,0.530]   0.544 [0.513,0.575] | +0.043 [+0.027,+0.062] *
+  PTT->RTT      2129    47 |   0.468 [0.457,0.477]   0.636 [0.571,0.689] | +0.168 [+0.106,+0.222] *
+  PTT->WRM       508    32 |   0.564 [0.525,0.597]   0.568 [0.529,0.603] | +0.004 [-0.008,+0.022]  
+  RTT->HTL       401    82 |   0.570 [0.539,0.594]   0.569 [0.544,0.592] | -0.001 [-0.027,+0.031]  
+  RTT->PTT      1136    80 |   0.457 [0.423,0.490]   0.532 [0.507,0.550] | +0.075 [+0.050,+0.096] *
+  RTT->WRM       508    32 |   0.561 [0.517,0.594]   0.562 [0.523,0.592] | +0.001 [-0.010,+0.015]  
+  WRM->HTL       401    82 |   0.529 [0.516,0.543]   0.573 [0.544,0.600] | +0.044 [+0.016,+0.069] *
+  WRM->PTT      1136    80 |   0.606 [0.569,0.628]   0.613 [0.560,0.644] | +0.007 [-0.029,+0.037]  
+  WRM->RTT      2129    47 |   0.730 [0.659,0.776]   0.728 [0.654,0.771] | -0.002 [-0.013,+0.006]  
+
+  ALL 16 METHODS, mean and median interval width
+  method                     uses     mean  median CI width
+  NoAdapt                 nothing    0.572            0.053
+  TargetOnly           arc labels    0.615            0.074
+  Source+Target        arc labels    0.587            0.075
+  COT                  arc labels    0.538            0.079
+  none-Ang-HS4         arc labels    0.546            0.062
+  none-Ang-HSsrc          nothing    0.551            0.060
+  none-Ang-PCA       arc segments    0.519            0.066
+  QOTu-Ang-HS4         arc labels    0.595            0.069
+  QOTu-Ang-HSsrc     arc segments    0.590            0.068
+  QOTu-Ang-PCA       arc segments    0.567            0.067
+  QOTc-Ang-HS4         arc labels    0.616            0.086
+  QOTc-Ang-HSsrc       arc labels    0.600            0.079
+  QOTc-Ang-PCA         arc labels    0.544            0.064
+  SDM-Ang-HS4          arc labels    0.612            0.076
+  SDM-Ang-HSsrc        arc labels    0.601            0.076
+  SDM-Ang-PCA          arc labels    0.559            0.077
+
+  PAIRED CONTRASTS   (intervals excluding zero, out of 12 pairs)
+  contrast                               mean   +ve   -ve  spans 0  median width
+  QOTu-Ang-HS4 - none-Ang-HS4          +0.049     6     0        6         0.054
+  QOTu-Ang-HSsrc - none-Ang-HSsrc      +0.039     6     0        6         0.050
+  QOTu-Ang-PCA - none-Ang-PCA          +0.048     7     1        4         0.069
+  QOTc-Ang-HS4 - none-Ang-HS4          +0.070     6     0        6         0.091
+  QOTc-Ang-HSsrc - none-Ang-HSsrc      +0.049     6     0        6         0.071
+  QOTc-Ang-PCA - none-Ang-PCA          +0.025     4     1        7         0.101
+  SDM-Ang-HS4 - none-Ang-HS4           +0.065     7     0        5         0.088
+  SDM-Ang-HSsrc - none-Ang-HSsrc       +0.050     7     0        5         0.085
+  SDM-Ang-PCA - none-Ang-PCA           +0.039     5     1        6         0.101
+  QOTu-Ang-HS4 - SDM-Ang-HS4           -0.016     0     2       10         0.086
+  QOTu-Ang-HSsrc - SDM-Ang-HSsrc       -0.011     1     2        9         0.079
+  QOTu-Ang-PCA - SDM-Ang-PCA           +0.009     3     1        8         0.087
+  QOTu-Ang-HSsrc - TargetOnly          -0.025     0     5        7         0.085
+  TargetOnly - NoAdapt                 +0.043     6     2        4         0.079
+  COT - NoAdapt                        -0.033     0     4        8         0.087
+
+==============================================================================================
+STAGE 5  LEFT RAIL DIAGNOSIS   why does one rail work and the other not?
+==============================================================================================
+
+--- 1. is the LABEL different between rails? ---
+  site        n   L pos   R pos | med|LProf| med|RProf|  L near tau  R near tau
+  HTL       803     167     166 |      0.223      0.237       22.4%       21.9%
+  PTT      2272     139     121 |      0.161      0.148       11.1%        9.0%
+  RTT      4259      70      82 |      0.115      0.115        4.1%        3.4%
+  WRM      1017      54      59 |      0.152      0.149       10.4%        9.9%
+
+--- 2. can each rail be predicted WITHIN a site at all? (5-fold) ---
+  if left is unpredictable within site, the transfer null is a feature problem
+  site     left BAC  right BAC
+  HTL         0.605      0.620
+  PTT         0.587      0.703
+  RTT         0.762      0.864
+  WRM         0.678      0.656
+
+--- 3. how strongly does each channel relate to its own-rail label? ---
+  HTL    BFI_own     BFI_C   BTI_own     BTI_C   MLI_own     MLI_C   LRI_own     LRI_C
+    L    +0.043    +0.219    +0.013    +0.018    -0.126    -0.115    -0.170    -0.029
+    R    +0.193    +0.205    -0.154    -0.064    -0.087    -0.095    -0.085    -0.057
+  PTT    BFI_own     BFI_C   BTI_own     BTI_C   MLI_own     MLI_C   LRI_own     LRI_C
+    L    -0.002    +0.019    -0.050    -0.084    +0.008    +0.095    -0.052    +0.108
+    R    -0.008    +0.026    -0.218    -0.129    +0.007    +0.118    +0.065    +0.089
+  RTT    BFI_own     BFI_C   BTI_own     BTI_C   MLI_own     MLI_C   LRI_own     LRI_C
+    L    +0.209    +0.206    +0.069    -0.057    -0.042    +0.020    -0.114    +0.046
+    R    +0.365    +0.251    -0.110    -0.069    -0.003    -0.004    -0.055    +0.071
+  WRM    BFI_own     BFI_C   BTI_own     BTI_C   MLI_own     MLI_C   LRI_own     LRI_C
+    L    +0.054    +0.134    -0.005    -0.105    -0.074    +0.119    +0.042    +0.042
+    R    +0.283    +0.164    -0.105    -0.051    -0.021    +0.031    +0.070    -0.005
+
+--- 4. repeat passes: does the label flip more on one rail? ---
+  HTL: only 1 run, no repeat pass available
+  PTT  (reference run 2022100607)
+    vs 2022100608   shared    680   L flip  4.56%   R flip  3.68%
+  RTT  (reference run 2022100710)
+    vs 2022100705   shared   4259   L flip  1.34%   R flip  1.62%
+    vs 2022100706   shared   4259   L flip  1.64%   R flip  1.64%
+    vs 2022100709   shared   4259   L flip  0.38%   R flip  0.42%
+    vs 2022100721   shared   4259   L flip  0.56%   R flip  0.66%
+    vs 2022100722   shared   4259   L flip  1.06%   R flip  1.03%
+  WRM: only 1 run, no repeat pass available
+
+--- 5. survey runs present per site (a §4 fact) ---
+  HTL: 1 run(s)  [np.int64(2022100717)]   used 2022100717
+  PTT: 2 run(s)  [np.int64(2022100607), np.int64(2022100608)]   used 2022100607
+  RTT: 6 run(s)  [np.int64(2022100705), np.int64(2022100706), np.int64(2022100709), np.int64(2022100710), np.int64(2022100721), np.int64(2022100722)]   used 2022100710
+  WRM: 1 run(s)  [np.int64(2022100714)]   used 2022100714
+
+==============================================================================================
+DONE in 88.8 minutes.  Everything above is also in ./qot_angle_results/REPORT.txt
+==============================================================================================

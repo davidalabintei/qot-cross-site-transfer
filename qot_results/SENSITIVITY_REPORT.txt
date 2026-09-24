@@ -1,0 +1,178 @@
+SENSITIVITY REPORT   eight rotations, right rail unless stated, contiguous arc
+Supersedes the four-rotation permutation and sweep stages in REPORT.txt.
+
+========================================================================================
+LEFT RAIL
+========================================================================================
+  QOT-u minus no transport, left rail, 30 cells
+frac         0.05    0.10    0.20    0.30    0.50
+enc ro                                           
+Amp HS4   -0.0151 -0.0129 -0.0036  0.0028  0.0101
+    HSsrc -0.0164 -0.0124 -0.0055 -0.0026  0.0028
+    PCA   -0.0033 -0.0002  0.0093  0.0096  0.0128
+Ang HS4   -0.0046  0.0080  0.0091  0.0131 -0.0015
+    HSsrc -0.0009  0.0017  0.0022  0.0021  0.0091
+    PCA    0.0035 -0.0108 -0.0078 -0.0037  0.0028
+  [MATCH ] minimum over the 30 cells                                  paper   -0.016   computed -0.0164
+  [MATCH ] maximum over the 30 cells                                  paper   +0.013   computed +0.0131
+
+  SKIPPED, the correlation check needs the cleaned input files, which are
+  not distributed with this repository. Missing: cleaned_HTL.csv, cleaned_PTT.csv, cleaned_RTT.csv, cleaned_WRM.csv
+  Set QOT_DATA to the folder holding them to run this check.
+
+========================================================================================
+BURES REGULARIZATION  delta, 5% and 50%
+========================================================================================
+
+  Amp  QOT-u minus no transport at each delta
+                   1e-12     1e-10     1e-09     1e-08     1e-06     1e-04     1e-02     range
+  HS-2    5%     +0.0447   +0.0447   +0.0447   +0.0447   +0.0447   +0.0450   +0.0475   0.0027
+  HS-2   50%     +0.0605   +0.0605   +0.0605   +0.0605   +0.0605   +0.0606   +0.0622   0.0017
+  HS-4    5%     +0.0520   +0.0520   +0.0520   +0.0520   +0.0520   +0.0524   +0.0522   0.0003
+  HS-4   50%     +0.0445   +0.0445   +0.0445   +0.0445   +0.0445   +0.0444   +0.0431   0.0014
+  PCA     5%     +0.0250   +0.0249   +0.0266   +0.0275   +0.0316   +0.0304   +0.0313   0.0068
+  PCA    50%     +0.0449   +0.0449   +0.0449   +0.0449   +0.0447   +0.0445   +0.0434   0.0014
+
+  Ang  QOT-u minus no transport at each delta
+                   1e-12     1e-10     1e-09     1e-08     1e-06     1e-04     1e-02     range
+  HS-2    5%     +0.0509   +0.0509   +0.0510   +0.0510   +0.0510   +0.0508   +0.0469   0.0041
+  HS-2   50%     +0.0390   +0.0390   +0.0390   +0.0390   +0.0389   +0.0393   +0.0376   0.0017
+  HS-4    5%     +0.0675   +0.0675   +0.0676   +0.0676   +0.0682   +0.0663   +0.0612   0.0069
+  HS-4   50%     +0.0489   +0.0489   +0.0489   +0.0489   +0.0490   +0.0491   +0.0450   0.0041
+  PCA     5%     +0.0387   +0.0391   +0.0375   +0.0379   +0.0376   +0.0318   +0.0392   0.0074
+  PCA    50%     +0.0481   +0.0478   +0.0480   +0.0484   +0.0493   +0.0488   +0.0515   0.0037
+  [MATCH ] largest movement across the seven values                   paper    0.007   computed 0.0074
+
+========================================================================================
+SINKHORN REGULARIZATION  epsilon, 5% and 50%
+========================================================================================
+
+  Amp  levels, mean BAC over the twelve pairs
+                        0.001    0.005     0.01     0.05      0.1      0.5
+  COT-u          5%      0.564    0.619    0.618    0.599    0.594    0.584
+  COT-u         50%      0.626    0.626    0.629    0.604    0.591    0.577
+  COT-c          5%      0.542    0.538    0.550    0.552    0.534    0.513
+  COT-c         50%      0.610    0.610    0.603    0.538    0.532    0.559
+  SDMu-HSsrc     5%      0.617    0.614    0.615    0.610    0.606    0.598
+  SDMu-HSsrc    50%      0.633    0.635    0.633    0.628    0.620    0.613
+  SDMu-HS4       5%      0.600    0.604    0.601    0.594    0.583    0.573
+  SDMu-HS4      50%      0.625    0.628    0.626    0.605    0.592    0.580
+  SDMu-PCA       5%      0.582    0.581    0.572    0.544    0.537    0.532
+  SDMu-PCA      50%      0.587    0.599    0.597    0.569    0.546    0.513
+  SDM-HSsrc      5%      0.572    0.572    0.571    0.556    0.545    0.544
+  SDM-HSsrc     50%      0.602    0.602    0.600    0.594    0.574    0.579
+  SDM-HS4        5%      0.550    0.548    0.546    0.540    0.536    0.550
+  SDM-HS4       50%      0.615    0.610    0.609    0.591    0.580    0.579
+  SDM-PCA        5%      0.494    0.493    0.494    0.496    0.527    0.543
+  SDM-PCA       50%      0.500    0.499    0.497    0.498    0.525    0.551
+
+  Amp  QOT-u minus COT-rho-u at each epsilon
+  HS-2    5%     -0.000   +0.003   +0.002   +0.007   +0.011   +0.019
+  HS-2   50%     -0.000   -0.002   -0.001   +0.005   +0.013   +0.020
+  HS-4    5%     +0.009   +0.005   +0.007   +0.015   +0.026   +0.036
+  HS-4   50%     -0.005   -0.008   -0.006   +0.015   +0.028   +0.040
+  PCA     5%     +0.006   +0.008   +0.016   +0.044   +0.051   +0.056
+  PCA    50%     +0.019   +0.007   +0.009   +0.038   +0.060   +0.093
+
+  Ang  levels, mean BAC over the twelve pairs
+                        0.001    0.005     0.01     0.05      0.1      0.5
+  COT-u          5%      0.564    0.619    0.618    0.599    0.594    0.584
+  COT-u         50%      0.626    0.626    0.629    0.604    0.591    0.577
+  COT-c          5%      0.542    0.538    0.550    0.552    0.534    0.513
+  COT-c         50%      0.610    0.610    0.603    0.538    0.532    0.559
+  SDMu-HSsrc     5%      0.543    0.558    0.558    0.560    0.561    0.567
+  SDMu-HSsrc    50%      0.553    0.559    0.560    0.572    0.578    0.589
+  SDMu-HS4       5%      0.562    0.584    0.583    0.581    0.583    0.577
+  SDMu-HS4      50%      0.540    0.546    0.545    0.557    0.575    0.585
+  SDMu-PCA       5%      0.528    0.531    0.543    0.527    0.529    0.514
+  SDMu-PCA      50%      0.542    0.536    0.538    0.537    0.548    0.528
+  SDM-HSsrc      5%      0.529    0.535    0.536    0.537    0.536    0.535
+  SDM-HSsrc     50%      0.597    0.599    0.599    0.601    0.601    0.586
+  SDM-HS4        5%      0.521    0.525    0.525    0.521    0.525    0.530
+  SDM-HS4       50%      0.607    0.612    0.612    0.612    0.608    0.599
+  SDM-PCA        5%      0.521    0.521    0.525    0.521    0.518    0.536
+  SDM-PCA       50%      0.550    0.562    0.562    0.559    0.549    0.589
+
+  Ang  QOT-u minus COT-rho-u at each epsilon
+  HS-2    5%     +0.059   +0.044   +0.044   +0.042   +0.041   +0.035
+  HS-2   50%     +0.037   +0.031   +0.030   +0.018   +0.012   +0.001
+  HS-4    5%     +0.048   +0.026   +0.027   +0.028   +0.027   +0.033
+  HS-4   50%     +0.055   +0.049   +0.050   +0.038   +0.020   +0.011
+  PCA     5%     +0.039   +0.036   +0.025   +0.040   +0.038   +0.053
+  PCA    50%     +0.025   +0.031   +0.029   +0.030   +0.020   +0.039
+
+  angle, QOT-u minus COT-rho-u above zero at every epsilon, readout, share: True
+  [MATCH ] Amp, COT-rho-u HS-2 level at eps .001, 5%                  paper    0.617   computed 0.6172
+  [MATCH ] Amp, COT-rho-u HS-2 level at eps .001, 50%                 paper    0.633   computed 0.6329
+  [MATCH ] Amp, QOT-u HS-2 level, 5% ("level with")                   paper    0.617   computed 0.6168
+  [MATCH ] Amp, QOT-u HS-2 level, 50% ("level with")                  paper    0.633   computed 0.6326
+  [MATCH ] Amp, HS-4 difference at eps .001, 5%                       paper   +0.009   computed +0.0091
+  [MATCH ] Amp, HS-4 difference at eps .001, 50%                      paper   -0.005   computed -0.0054
+  [MATCH ] Amp, PCA difference at eps .001, 5%                        paper   +0.006   computed +0.0062
+  [MATCH ] Amp, PCA difference at eps .001, 50%                       paper   +0.019   computed +0.0194
+  [MATCH ] Amp, PCA difference at eps .05, 5%                         paper   +0.044   computed +0.0438
+  [MATCH ] Amp, PCA difference at eps .05, 50%                        paper   +0.038   computed +0.0375
+  [MATCH ] Ang, HS-2 difference at eps .001, 5%                       paper   +0.059   computed +0.0592
+  [MATCH ] Ang, HS-2 difference at eps .001, 50%                      paper   +0.037   computed +0.0371
+  [MATCH ] Ang, HS-2 difference at eps .05, 5%                        paper   +0.042   computed +0.0421
+  [MATCH ] Ang, HS-2 difference at eps .05, 50%                       paper   +0.018   computed +0.0182
+
+========================================================================================
+ANGLE SCALING  alpha, HS-2, QOT-u minus no transport
+========================================================================================
+  [MATCH ] alpha 0.01, 5%                                             paper   +0.051   computed +0.0510
+  [MATCH ] alpha 0.025, 5%                                            paper   +0.050   computed +0.0497
+  [MATCH ] alpha 0.05, 5%                                             paper   +0.049   computed +0.0488
+  [MATCH ] alpha 0.1, 5%                                              paper   +0.045   computed +0.0454
+  [MATCH ] alpha 0.01, 50%                                            paper   +0.039   computed +0.0390
+  [MATCH ] alpha 0.025, 50%                                           paper   +0.038   computed +0.0382
+  [MATCH ] alpha 0.05, 50%                                            paper   +0.040   computed +0.0400
+  [MATCH ] alpha 0.1, 50%                                             paper   +0.040   computed +0.0396
+
+========================================================================================
+PCA COMPONENTS  share of folds choosing each K, QOT-u, all labeled shares
+========================================================================================
+  Amp  K=4 19%   K=8 35%   K=16 20%   K=32 15%   K=64 11%
+  [MATCH ] Amp, share with eight or fewer                             paper     0.54   computed 0.544
+  Ang  K=4 10%   K=8 9%   K=16 26%   K=32 31%   K=64 25%
+  [MATCH ] Ang, share with 16 or more                                 paper     0.81   computed 0.812
+
+========================================================================================
+ARC CONSTRUCTION  contiguous against random
+========================================================================================
+  [MATCH ] largest change in QOT-u minus no transport, 30 cells       paper    0.017   computed 0.0169
+  largest single-method movements at 5%: QOTc-HS4 Ang 0.056, COT Ang 0.036, COT Amp 0.036, TargetOnly Ang 0.021
+  [MATCH ] largest movement at 5% (QOTc-HS4)                          paper    0.056   computed 0.0558
+
+========================================================================================
+BLOCK BOOTSTRAP  amplitude, QOT-u minus no transport at HS-2
+========================================================================================
+  block length by target site: HTL 10   PTT 21   RTT 30   WRM 14
+  [MATCH ] block length at HTL                                        paper       10   computed 10.0
+  [MATCH ] block length at PTT                                        paper       21   computed 21.0
+  [MATCH ] block length at RTT                                        paper       30   computed 30.0
+  [MATCH ] block length at WRM                                        paper       14   computed 14.0
+  [MATCH ] 5%, pairs with a positive difference                       paper        9   computed 9.0
+  [MATCH ] 5%, pairs whose interval excludes zero                     paper        6   computed 6.0
+    rotations used per pair at 5%: 5 2 2 8 2 2 8 5 2 8 5 2
+  [MATCH ] 50%, pairs with a positive difference                      paper        9   computed 9.0
+  [MATCH ] 50%, pairs whose interval excludes zero                    paper        7   computed 7.0
+    rotations used per pair at 50%: 8 8 8 8 8 8 8 8 8 8 8 8
+  NOTE  the bootstrap keeps only folds whose labeled stretch holds at least two
+        of each class, so at 5% some pairs rest on fewer than eight rotations.
+
+========================================================================================
+LABEL PERMUTATION  5, 20 and 50%
+========================================================================================
+  [MATCH ] source shuffle, lowest of the unconditional methods        paper    0.487   computed 0.4872
+  [MATCH ] source shuffle, highest of the unconditional methods       paper    0.527   computed 0.5268
+  [MATCH ] QOT-u HS-2 Amp 50%, real                                   paper    0.633   computed 0.6326
+  [MATCH ] QOT-u HS-2 Amp 50%, source shuffle                         paper    0.503   computed 0.5028
+  [MATCH ] target only, change under source shuffle (4 dp)            paper   0.0000   computed 0.00000
+  [MATCH ] target only, target shuffle, 50%                           paper    0.498   computed 0.4983
+  [MATCH ] unconditional, HS-2 and PCA, change under target shuffle   paper   0.0000   computed 0.00000
+  [MATCH ] unconditional, HS-4, largest change under target shuffle   paper    0.006   computed 0.0064
+  [MATCH ] QOT-c HS-2 Amp 50%, loss to target shuffle                 paper    0.063   computed 0.0632
+  [MATCH ] QOT-c HS-2 Amp 50%, loss to source shuffle                 paper    0.019   computed 0.0188
+
+0 claim(s) differ from the paper.
