@@ -1,16 +1,8 @@
 """Fig. 2  The two pipelines, feature vector (left) and density matrix (right).
 
-No "classical" or "quantum" path labels. Sinkhorn (COT-rho) also runs on the
-density matrix path, so neither label is true of a whole path.
-
-WHY REDRAWN. The submitted figure showed only the class-conditional
-transports, had no no-transport control, and did not show Sinkhorn applied to
-the vectorized density matrix. All three are now part of the method, and the
-no-transport control is the main comparison.
-
 Greyscale, serif, fonts embedded, to match Fig. 1.
-Output: tex/fig_pipeline.pdf and tex/fig_pipeline.png
-Run from qot_run:  python3 make_fig2.py
+Output: figures/fig_pipeline.pdf and figures/fig_pipeline.png
+Run from the repository root:  python3 make_fig2.py
 """
 import os
 import matplotlib

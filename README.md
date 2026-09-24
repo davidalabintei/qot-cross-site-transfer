@@ -1,7 +1,6 @@
 # Quantum Optimal Transport for Cross-Site Domain Adaptation in Railroad Monitoring
 
-Code and per-fold results for the study of the same name, submitted to the ASCE
-*Journal of Infrastructure Systems*.
+Code and per-fold results for the study of the same name.
 
 The problem is cross-site transfer. A classifier is fitted at one railroad test
 site to predict, from ground-penetrating radar ballast indices, whether a track
@@ -23,24 +22,19 @@ transport step removed and nothing else changed.
 
 ## What is here, and what is not
 
-The analysis code and the per-fold result files are in this repository.
+The analysis code and the result files are in this repository.
 
-The ground-penetrating radar indices and the track geometry records are not.
-They were provided by a third party and are proprietary. Requests for them go to
-the data owner. The scripts that need them say so and name the columns they
-expect, so the pipeline can be run against equivalent data from elsewhere.
+The data are available from the data owner upon reasonable request.
 
 The result CSVs are derived outputs. They hold one row per fold and method with
-balanced accuracy, precision and recall. They carry no raw radar or geometry
-measurement. Every table and figure in the paper regenerates from them without
-any access to the withheld inputs.
+balanced accuracy, precision and recall.
 
 ## Layout
 
 ```
-run_everything.py          full experiment, amplitude encoding
-run_angle.py               the same experiment, angle encoding
-run_uncond_classical.py    the unconditional Sinkhorn comparators
+run_everything.py          main grid, amplitude encoding
+run_angle.py               the same grid, angle encoding
+run_uncond_classical.py    adds COT-u and COT-rho-u, which the main grid omits
 rerun_sweeps8.py           sensitivity sweeps at eight starting positions
 rerun_perm8.py             label permutation test at eight starting positions
 test_magnitude.py          does discarding absolute severity help transfer
@@ -86,6 +80,11 @@ with a message when they are absent. Everything else runs.
 This needs the withheld input files. Order matters, because the later scripts
 import the earlier ones to reuse the fold construction rather than
 reimplementing it.
+
+The main grid covers the Bures transports, class-conditional Sinkhorn, the
+no-transport controls and the three feature baselines. The unconditional
+Sinkhorn comparators, COT-u and COT-rho-u, come from `run_uncond_classical.py`,
+so a complete set of results needs both.
 
 ```
 OMP_NUM_THREADS=1 python3 run_everything.py       --data /path/to/inputs
@@ -224,9 +223,6 @@ paper reports.
 Dengimowei David Alabintei, Department of Civil and Environmental Engineering,
 University of Maryland, College Park.
 alabinte@umd.edu, davidalabintei97@gmail.com
-
-Requests for the ground-penetrating radar and track geometry data go to the
-data owner, not to this repository.
 
 ## License
 

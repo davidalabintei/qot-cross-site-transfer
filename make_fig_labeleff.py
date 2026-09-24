@@ -6,13 +6,11 @@ directed site pairs.
 
 Six series, every method in the main transfer table that is not a readout
 variant. The Bures map, the two Sinkhorn transports, and the three references.
-The density-matrix methods use the HS-2 readout, which needs no labeled target
-segments and is therefore defined at every labeled percentage.
+The density-matrix methods use the HS-2 readout.
 
 No error band is drawn. The spread across the twelve pairs is 0.04 to 0.10, and
 almost all of it is shared between the methods, so bands overlap completely and
-suggest that nothing is distinguishable. The comparison is paired, and the
-paired spread belongs with the paired contrast rather than with these means.
+suggest that nothing is distinguishable.
 
 Run from the repository root, after the result CSVs are in place.
     python3 make_fig_labeleff.py

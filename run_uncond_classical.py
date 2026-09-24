@@ -9,8 +9,8 @@ WHAT IT ADDS
         SDMu-*       unconditional Sinkhorn on the vectorized density matrix,
                      read out through HSsrc (HS-2), HS4 (HS-4) and PCA
 
-    Both use the target adaptation SEGMENTS and not their labels, which is what
-    the unconditional Bures map uses. The isolated contrast is therefore
+    Both use the target adaptation segments alone, with none of their labels,
+    which is what the unconditional Bures map uses. The isolated contrast is therefore
     QOTu-<readout> minus SDMu-<readout>. Same information from the target, same
     readout, one difference, the geometry the transport acts in.
 

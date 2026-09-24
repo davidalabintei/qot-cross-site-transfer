@@ -4,8 +4,14 @@
  QOT CROSS-SITE TRANSFER  -  COMPLETE EXPERIMENT, ONE FILE
 ================================================================================
 
-Runs every experiment behind the reported results and prints all of it. Nothing
-is imported from elsewhere; this file is the whole pipeline.
+Runs the main grid of the experiment and prints all of it. This file imports
+nothing from the repository. The other scripts import it, so the folds, the
+encodings and the readouts are shared rather than reimplemented.
+
+Not everything is here. The unconditional Sinkhorn comparators are produced by
+run_uncond_classical.py. The sweep and permutation stages below run at four
+starting positions and are superseded by rerun_sweeps8.py and rerun_perm8.py,
+which run at the eight used everywhere else.
 
 WHAT IT DOES, IN ORDER
 
@@ -19,7 +25,7 @@ WHAT IT DOES, IN ORDER
   2  PERM        every method rerun with the SOURCE labels scrambled, and again
                  with the ARC labels scrambled. Separates methods that transfer
                  from methods that quietly do target-only learning.
-  3  SWEEP       sensitivity to the two regularisation constants, EPS in the
+  3  SWEEP       sensitivity to the two regularization constants, EPS in the
                  Bures map and the Sinkhorn epsilon in the classical baselines.
   4  BOOT        moving-block bootstrap 95% intervals for every method and every
                  paired contrast, block length measured from the data.
@@ -28,7 +34,7 @@ WHAT IT DOES, IN ORDER
 TASK
   Per-rail profile exceedance. A BMP-EMP segment is defective when the maximum
   absolute 62 ft profile on that rail exceeds 0.4 in. Features are 8 ballast
-  channels, own rail and centre, one ballast index per pair.
+  channels, own rail and center, one ballast index per pair.
 
 METHODS   4 on raw features, then a 4 x 3 grid.
     transports  none | QOTu unconditional Bures | QOTc conditional Bures
@@ -40,8 +46,9 @@ METHODS   4 on raw features, then a 4 x 3 grid.
   QOTu-HSsrc minus none-HSsrc is the map and nothing else.
 
   "Uses" records what the WHOLE pipeline touches on the target, since no
-  transport is not the same as no adaptation. HS4 uses arc LABELS through its
-  prototypes, PCA uses arc SEGMENTS through its basis, HSsrc uses NOTHING.
+  transport is not the same as no adaptation. HS4 uses the arc segments and their
+  labels through its prototypes, PCA uses the arc segments alone through its
+  basis, HSsrc uses neither.
   Only none-HSsrc and raw NoAdapt are true no-adaptation baselines.
 
 --------------------------------------------------------------------------------
@@ -105,7 +112,7 @@ THRESH = 0.4            # inches, profile exceedance threshold
 MIN_ROWS = 10           # geometry records required in a segment
 BUFFER_MI = 200.0/5280  # 200 ft buffer either side of the evaluation block
 EPS = 1e-9              # ridge and eigenvalue floor inside the Bures map
-OTREG = 0.05            # Sinkhorn entropic regularisation
+OTREG = 0.05            # Sinkhorn entropic regularization
 K_GRID = (4, 8, 16, 32, 64)
 FRACS = [.05, .10, .20, .30, .50]
 N_ROT = 8
@@ -176,7 +183,7 @@ def vec_rho(R):
 
 
 def unvec_rho(V, d):
-    """Inverse of vec_rho. A Sinkhorn barycentre is a convex combination of target
+    """Inverse of vec_rho. A Sinkhorn barycenter is a convex combination of target
     density matrices, so unvecking it gives a valid mixed state the HS readout
     can consume exactly like a transported one."""
     iu = np.triu_indices(d, 1); m = len(iu[0])
@@ -236,12 +243,12 @@ def apply_map(M_, R):
     return Z
 
 def qot_uncond(Rs, Rta, eps=EPS):
-    """Pooled source mean onto pooled arc mean. Uses arc SEGMENTS, no arc labels."""
+    """Pooled source mean onto pooled arc mean. Uses the arc segments alone."""
     if not len(Rs) or not len(Rta): return Rs.copy()
     return apply_map(bures_map(Rs.mean(0), Rta.mean(0), Rs.shape[1], eps), Rs)
 
 def qot_cond(Rs, ys, Rta, ya, eps=EPS):
-    """One Bures map per class. Uses arc LABELS."""
+    """One Bures map per class. Uses the arc segments and their labels."""
     out = Rs.copy(); d = Rs.shape[1]
     for c in (0, 1):
         si = np.flatnonzero(ys == c); ti = np.flatnonzero(ya == c)
@@ -424,7 +431,7 @@ def stage_verify(quick):
     ys = np.r_[np.zeros(30, int), np.ones(30, int)]
     ya = np.r_[np.zeros(20, int), np.ones(20, int)]
     Rsd = unvec_rho(cond_sinkhorn(vec_rho(Rs), ys, vec_rho(Rt), ya), 8)
-    chk('unvec(Sinkhorn barycentre) has unit trace and is PSD',
+    chk('unvec(Sinkhorn barycenter) has unit trace and is PSD',
         np.allclose(np.trace(Rsd, axis1=1, axis2=2).real, 1.0, atol=1e-8)
         and np.linalg.eigvalsh(Rsd).min() > -1e-9)
 
@@ -668,7 +675,7 @@ def stage_perm(quick):
 
 # ═══════════════════════════════════════════════════════════ 3. SWEEP
 def stage_sweep(quick):
-    H('STAGE 3  SWEEPS   sensitivity to the two regularisation constants')
+    H('STAGE 3  SWEEPS   sensitivity to the two regularization constants')
     EPS_GRID = [1e-12, 1e-9, 1e-6, 1e-4, 1e-2] if quick else \
                [1e-12, 1e-10, 1e-9, 1e-8, 1e-6, 1e-4, 1e-2]
     REG_GRID = [0.001, 0.01, 0.05, 0.5] if quick else [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
@@ -980,7 +987,7 @@ def main():
     L(textwrap.dedent('''
       Task    per-rail profile exceedance, max |Prof62| in a BMP-EMP segment > 0.4 in
       Data    cleaned_<SITE>.csv, 4 TTC sites, 12 directed pairs
-      Feats   8 ballast channels, own rail and centre, one index per pair
+      Feats   8 ballast channels, own rail and center, one index per pair
       Encode  amplitude, 8 features -> 3 qubits -> rank-one 8x8 density matrix
       '''))
 

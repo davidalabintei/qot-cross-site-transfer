@@ -1,7 +1,7 @@
 """Why transport gives no gain on the left rail.
 
 Reports the point-biserial correlation between each own-rail ballast index and
-the per-rail profile defect label, for every site and both rails. The centre
+the per-rail profile defect label, for every site and both rails. The center
 channel is excluded because both rails share it, so only the four own-rail
 features are informative about a rail-specific difference.
 

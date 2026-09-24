@@ -1,13 +1,11 @@
 """Fig. 1  Segment-level category proportions for the four GPR ballast indices.
 
 Counts come from the CLEANED files, one survey run per site, segmented on
-(BMP, EMP) with at least 10 geometry records, which is exactly the segment
-definition load() uses in run_everything.py. Segment counts therefore match
+(BMP, EMP) with at least 10 geometry records. Segment counts therefore match
 the analysis: HTL 803, PTT 2272, RTT 4259, WRM 1017.
 
 Greyscale, light to dark with increasing category number. BFI and MLI increase
-with severity, BTI and LRI increase with favorable condition, so the ramp
-direction carries no meaning on its own and the caption states the direction.
+with severity, BTI and LRI increase with favorable condition.
 
 Output: fig_eda_stacked_grey.pdf, vector, fonts embedded.
 """

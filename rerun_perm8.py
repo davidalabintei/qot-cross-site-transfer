@@ -1,19 +1,23 @@
 """Label permutation test at eight starting positions on the contiguous label
 stretch, with the unconditional classical methods included.
 
+NOT REPORTED IN THE PAPER. This check is included for completeness. It is a
+validity check on the pipeline rather than a result, and no number from it
+appears in the manuscript.
+
 WHAT IT CHECKS
-    Every method is described as using either the source labels alone or the
-    source and target labels together. This test confirms that each one uses
-    what it is described as using, by rerunning the full protocol with labels
-    shuffled.
+    Every method is described as using either the source segments alone or the
+    source segments together with their labels. This test confirms that each
+    one uses what it is described as using, by rerunning the full protocol with
+    labels shuffled.
 
 WHY IT IS SEPARATE
     The permutation stage inside run_everything.py runs at four starting
-    positions and on the randomly drawn label stretch. Every reported number
-    uses eight positions and the contiguous stretch, so that stage cannot be
-    reported beside the main tables. That stage also covers only the METHODS
-    list, which has no COT-u and no COT-rho-u, and those are the unconditional
-    classical comparators where the test is most informative.
+    positions and on the randomly drawn label stretch. Everything else in the
+    study uses eight positions and the contiguous stretch, so that stage is not
+    comparable with the rest. It also covers only the METHODS list, which has
+    no COT-u and no COT-rho-u, and those are the unconditional classical
+    comparators where the test is most informative.
 
 WHAT IT RUNS, per encoding, right and left rail, contiguous label stretch
     8 starting positions, 5, 20 and 50 percent.

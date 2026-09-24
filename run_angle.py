@@ -114,7 +114,7 @@ THRESH = 0.4            # inches, profile exceedance threshold
 MIN_ROWS = 10           # geometry records required in a segment
 BUFFER_MI = 200.0/5280  # 200 ft buffer either side of the evaluation block
 EPS = 1e-9              # ridge and eigenvalue floor inside the Bures map
-OTREG = 0.05            # Sinkhorn entropic regularisation
+OTREG = 0.05            # Sinkhorn entropic regularization
 K_GRID = (4, 8, 16, 32, 64)
 FRACS = [.05, .10, .20, .30, .50]
 N_ROT = 8
@@ -196,14 +196,14 @@ ANG_ALPHA = 0.01          # theta lives in [alpha*pi, (1-alpha)*pi]
 
 def angle_rho(X, alpha=None):
     """Angle encoding. Features are consumed two at a time as the Bloch angles of
-    one qubit, own rail as theta and centre as phi, one ballast index per qubit.
+    one qubit, own rail as theta and center as phi, one ballast index per qubit.
     Four qubits are tensored into a 16-dimensional product state.
 
         |psi_k> = cos(theta/2)|0> + e^{i phi} sin(theta/2)|1>
 
     theta is mapped into [alpha*pi, (1-alpha)*pi] rather than [0, pi]. At theta = 0
     or pi the qubit sits at a pole and phi has NO effect on rho, which silently
-    destroys the centre channel for that index. On this data that happens for 48 to
+    destroys the center channel for that index. On this data that happens for 48 to
     93 percent of segments depending on the index, since these are 3 and 5 level
     ordinals whose mode sits at a scale endpoint. The weight phi carries in rho is
     exactly sin(theta), so alpha sets the worst case: sin(0.01*pi) = 0.031.
@@ -213,7 +213,7 @@ def angle_rho(X, alpha=None):
     for k, idx in enumerate(['BFI', 'BTI', 'MLI', 'LRI']):
         lo, hi = ANG_BOUNDS[idx]
         u = (X[:, 2*k] - lo)/(hi - lo)          # own rail, in [0,1] by construction
-        v = (X[:, 2*k+1] - lo)/(hi - lo)        # centre
+        v = (X[:, 2*k+1] - lo)/(hi - lo)        # center
         th = (a + (1 - 2*a)*u)*np.pi            # never 0, never pi
         ph = v*np.pi                            # azimuthal, no degeneracy to avoid
         q = np.column_stack([np.exp(-1j*ph/2)*np.cos(th/2),
@@ -230,7 +230,7 @@ def vec_rho(R):
 
 
 def unvec_rho(V, d):
-    """Inverse of vec_rho. A Sinkhorn barycentre is a convex combination of target
+    """Inverse of vec_rho. A Sinkhorn barycenter is a convex combination of target
     density matrices, so unvecking it gives a valid mixed state the HS readout
     can consume exactly like a transported one."""
     iu = np.triu_indices(d, 1); m = len(iu[0])
@@ -290,12 +290,12 @@ def apply_map(M_, R):
     return Z
 
 def qot_uncond(Rs, Rta, eps=EPS):
-    """Pooled source mean onto pooled arc mean. Uses arc SEGMENTS, no arc labels."""
+    """Pooled source mean onto pooled arc mean. Uses the arc segments alone."""
     if not len(Rs) or not len(Rta): return Rs.copy()
     return apply_map(bures_map(Rs.mean(0), Rta.mean(0), Rs.shape[1], eps), Rs)
 
 def qot_cond(Rs, ys, Rta, ya, eps=EPS):
-    """One Bures map per class. Uses arc LABELS."""
+    """One Bures map per class. Uses the arc segments and their labels."""
     out = Rs.copy(); d = Rs.shape[1]
     for c in (0, 1):
         si = np.flatnonzero(ys == c); ti = np.flatnonzero(ya == c)
@@ -486,7 +486,7 @@ def stage_verify(quick):
     ys = np.r_[np.zeros(30, int), np.ones(30, int)]
     ya = np.r_[np.zeros(20, int), np.ones(20, int)]
     Rsd = unvec_rho(cond_sinkhorn(vec_rho(Rs), ys, vec_rho(Rt), ya), 16)
-    chk('unvec(Sinkhorn barycentre) has unit trace and is PSD',
+    chk('unvec(Sinkhorn barycenter) has unit trace and is PSD',
         np.allclose(np.trace(Rsd, axis1=1, axis2=2).real, 1.0, atol=1e-8)
         and np.linalg.eigvalsh(Rsd).min() > -1e-9)
 
@@ -752,7 +752,7 @@ def stage_perm(quick):
 
 # ═══════════════════════════════════════════════════════════ 3. SWEEP
 def stage_sweep(quick):
-    H('STAGE 3  SWEEPS   sensitivity to the two regularisation constants')
+    H('STAGE 3  SWEEPS   sensitivity to the two regularization constants')
     EPS_GRID = [1e-12, 1e-9, 1e-6, 1e-4, 1e-2] if quick else \
                [1e-12, 1e-10, 1e-9, 1e-8, 1e-6, 1e-4, 1e-2]
     REG_GRID = [0.001, 0.01, 0.05, 0.5] if quick else [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
@@ -866,7 +866,7 @@ def stage_alpha(quick):
     H('STAGE 3b  ALPHA SWEEP   how far theta is kept off the Bloch poles')
     L(textwrap.dedent(f"""
       theta is mapped into [alpha*pi, (1-alpha)*pi]. At a pole the qubit state is
-      |0> or |1> and phi has no effect on rho, so the CENTRE channel for that index
+      |0> or |1> and phi has no effect on rho, so the CENTER channel for that index
       is destroyed for that segment. The weight phi carries in rho is exactly
       sin(theta), so alpha sets the worst case.
 
@@ -874,7 +874,7 @@ def stage_alpha(quick):
       """ + '\n'.join(f'          {a:<8.3f} {np.sin(a*np.pi):.3f}' for a in ALPHA_GRID)
       + """
 
-      Larger alpha protects the centre channel and compresses the own-rail range.
+      Larger alpha protects the center channel and compresses the own-rail range.
       alpha = 0.01 is the primary setting, the minimal intervention that removes the
       degeneracy. The rest is the sensitivity analysis.
       """))
@@ -1132,9 +1132,9 @@ def main():
     L(textwrap.dedent('''
       Task    per-rail profile exceedance, max |Prof62| in a BMP-EMP segment > 0.4 in
       Data    cleaned_<SITE>.csv, 4 TTC sites, 12 directed pairs
-      Feats   8 ballast channels, own rail and centre, one index per pair
+      Feats   8 ballast channels, own rail and center, one index per pair
       Encode  Amp  8 features -> 3 qubits -> rank-one 8x8 density matrix
-              Ang  own rail as theta, centre as phi, one ballast index per qubit,
+              Ang  own rail as theta, center as phi, one ballast index per qubit,
                    4 qubits -> 16x16. Fixed category bounds (BFI/BTI 1-5,
                    MLI/LRI 1-3), so no clipping and no site dependence, and
                    theta held in [0.01pi, 0.99pi] so phi is never destroyed.
