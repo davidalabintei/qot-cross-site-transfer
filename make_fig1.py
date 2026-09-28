@@ -5,7 +5,8 @@ Counts come from the CLEANED files, one survey run per site, segmented on
 the analysis: HTL 803, PTT 2272, RTT 4259, WRM 1017.
 
 Greyscale, light to dark with increasing category number. BFI and MLI increase
-with severity, BTI and LRI increase with favorable condition.
+with severity and LRI increases with favorable condition. BTI is not monotonic,
+since category 4 is the design thickness.
 
 Output: fig_eda_stacked_grey.pdf, vector, fonts embedded.
 """
